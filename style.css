@@ -1,0 +1,366 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+nav ul li {
+    display: inline;
+}
+
+nav ul li a {
+    text-decoration: none;
+    font-size: 1.2em;
+    color: #333;
+}
+
+nav ul li a:hover {
+    color: #007BFF;
+}
+
+main {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px;
+}
+
+.card {
+    background-color: white;
+    padding: 40px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card a {
+    text-decoration: none;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.card a:hover {
+    color: #007BFF;
+}
+
+
+.subheading {
+    text-align: center;
+    font-size: 1.8em;
+    margin: 20px 0;
+}
+
+.action-cards {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.action {
+    text-align: center;
+}
+
+.icon {
+    font-size: 4em;
+    margin-bottom: 10px;
+}
+
+.action p {
+    font-size: 1.2em;
+}
+
+footer {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.2em;
+}
+
+.content {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.input-section {
+    width: 60%;
+}
+
+input, select, textarea {
+    display: block;
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.add-item-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.phone {
+
+    padding: 20px;
+
+    width: 375px; /* iPhone X width */
+    height: 612px; /* iPhone X height */
+    border: 2px solid #ddd;
+    border-radius: 30px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* For realistic shadow */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+}
+
+.phone-screen {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: scroll; /* Enable scrolling inside the phone */
+    box-shadow: inset 0px 2px 6px rgba(0, 0, 0, 0.1); /* Shadow for inner content */
+}
+
+.display-section {
+    border: 1px solid #ddd;
+    padding: 10px;
+    min-height: 350px;
+    overflow-y: auto;
+}
+
+.phone-heading {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #eee;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.display-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    position: relative;
+}
+
+.display-item.active {
+    background-color: yellow;
+}
+
+.trash-icon {
+    display: none;
+    position: absolute;
+    right:5px; /* Right side of the item */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: red;
+}
+
+.display-item:hover .trash-icon {
+    display: inline;
+}
+
+.dragging {
+    opacity: 0.5;
+    border: 2px dashed #007BFF;
+}
+
+.over {
+    border-bottom: 2px solid #007BFF;
+}
+
+.submit-btn {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: not-allowed;
+    width: 50%;
+    border-radius: 5px;
+}
+
+.submit-btn.enabled {
+    cursor: pointer;
+    background-color: #28a745;
+}
+
+  
+ 
+
+#carousel {
+    position: relative;
+    height: 400px;
+    top: 50%;
+    transform: translateY(20%);
+    overflow: hidden;
+}
+
+#carousel div {
+    position: absolute;
+    transition: transform 1s, left 1s, opacity 1s, z-index 0s;
+    opacity: 1;
+}
+
+#carousel div img {
+    width: 400px;
+    transition: width 1s;
+}
+
+#carousel div.hideLeft {
+    left: 0%;
+    opacity: 0;
+    transform: translateY(50%) translateX(-50%);
+}
+
+#carousel div.hideLeft img {
+    width: 200px;
+}
+
+#carousel div.hideRight {
+    left: 100%;
+    opacity: 0;
+    transform: translateY(50%) translateX(-50%);
+}
+
+#carousel div.hideRight img {
+    width: 200px;
+}
+
+#carousel div.prev {
+    z-index: 5;
+    left: 30%;
+    transform: translateY(50px) translateX(-50%);
+}
+
+#carousel div.prev img {
+    width: 300px;
+}
+
+#carousel div.prevLeftSecond {
+    z-index: 4;
+    left: 15%;
+    transform: translateY(50%) translateX(-50%);
+    opacity: 0.7;
+}
+
+#carousel div.prevLeftSecond img {
+    width: 200px;
+}
+
+#carousel div.selected {
+    z-index: 10;
+    left: 50%;
+    transform: translateY(0px) translateX(-50%);
+}
+
+#carousel div.next {
+    z-index: 5;
+    left: 70%;
+    transform: translateY(50px) translateX(-50%);
+}
+
+#carousel div.next img {
+    width: 300px;
+}
+
+#carousel div.nextRightSecond {
+    z-index: 4;
+    left: 85%;
+    transform: translateY(50%) translateX(-50%);
+    opacity: 0.7;
+}
+
+#carousel div.nextRightSecond img {
+    width: 200px;
+}
+
+.buttonscarousel {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 10px;
+}
+
+/* Ghost image for empty image slot */
+.ghost {
+    opacity: 0.3;
+    border: 2px dashed #ccc;
+    width: 400px;
+    height: 400px;
+    background-color: transparent;
+}
+
+.ghost img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Delete button */
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    z-index: 100;
+}

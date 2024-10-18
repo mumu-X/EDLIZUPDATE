@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Record</title>
+    <!-- Link FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h2 class="subheading">Delete Drug</h2>
+
+        <div class="content">
+            <div class="input-section">
+                <label for="heading">Drug:</label>
+                <select id="heading">
+                    <option value="Head 1">Head 1</option>
+                    <option value="Head 2">Head 2</option>
+                </select>
+
+            </div>
+
+            <div class="input-section">
+                <div class="phone-screen">
+                    <div id="fakePhoneHeading" class="phone-heading">
+                        <!-- Display Heading -->
+                        <span id="displayHeading"></span>
+                    </div>
+
+                    <div class="delete-section">
+                        <!-- Trash can delete icon -->
+                        <button id="deleteButton" class="delete-btn">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete?</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Select a drug to delete.</p>
+        </footer>
+    </div>
+
+    <script src="../script.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Record</title>
+    <script type="module" src="../../index.js"></script>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        /* Add styles for the new pop-up */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .popup input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup .add-btn, .popup .cancel-btn {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        /* Styling for the plus icons */
+        .add-icon {
+            cursor: pointer;
+            font-size: 20px;
+            margin-left: 10px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h2 class="subheading">Add New Disease Record</h2>
+
+        <div class="content">
+            <div class="input-section">
+                <div id="topicsContainer" class="topics-container">
+                    <label for="heading">Heading:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="heading">
+                            <option value="">Select a heading or use ➕ to create one</option>
+                        </select>
+                        <span id="addHeadingIcon" class="add-icon">➕</span>
+                    </div>
+
+                    <label for="subheading">Subheading:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="subheading">
+                            <option value="">Select a subheading</option>
+                            <option value="new">New Subheading</option>
+                        </select>
+                        <span id="addSubheadingIcon" class="add-icon">➕</span>
+                    </div>
+                </div>
+
+                <div class="add-item-section">
+                    <label for="itemType">Add Item:</label>
+                    <select id="itemType">
+                        <option value="text">Text</option>
+                        <option value="bullet">Bullet</option>
+                    </select>
+                    <button id="addItem">+</button>
+                </div>
+
+                <textarea id="inputText" placeholder="Input text here"></textarea>
+            </div>
+
+            <div class="phone">
+                <div class="phone-screen">
+                    <div id="fakePhoneHeading" class="phone-heading"></div>
+                    <div id="fakePhoneDisplay" class="display-section"></div>
+                </div>
+                <button id="createnewrecord" class="submit-btn">Create New Record</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Select and add content.</p>
+        </footer>
+
+        <!-- Popup for adding a new item -->
+        <div id="popup" class="popup">
+            <h3>Add New</h3>
+            <input type="text" id="newItemInput" placeholder="Enter new item" />
+            <div class="popup-buttons">
+                <button id="popupAddBtn" class="add-btn">Add</button>
+                <button id="popupCancelBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../main.js"></script>
+    <script>
+
+let cacheArray = {
+    maintopic: '',
+    subtopic: {subtopics:[] },
+};
+
+        // Example topics definition (assuming you already have this in cache)
+ const topics = [];
+        const addHeadingIcon = document.getElementById('addHeadingIcon');
+        const addSubheadingIcon = document.getElementById('addSubheadingIcon');
+        const headingSelect = document.getElementById('heading');
+        const subheadingSelect = document.getElementById('subheading');
+        const fakePhoneHeading = document.getElementById('fakePhoneHeading');
+        const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
+        const inputText = document.getElementById('inputText');
+        const popup = document.getElementById('popup');
+        const newItemInput = document.getElementById('newItemInput');
+        let currentAddContext = null;
+
+        // Function to show the pop-up
+        function openPopup() {
+            popup.style.display = 'block';
+            newItemInput.value = ''; // Clear input
+        }
+
+        // Function to close the pop-up
+        function closePopup() {
+            popup.style.display = 'none';
+        }
+
+        // Function to update local storage with new headings and subheadings
+        function updateLocalStorage() {
+            const heading = headingSelect.value;
+            const subheading = subheadingSelect.value;
+
+            if (heading === '' || subheading === '') return;
+
+            // Ensure cachedData has the correct structure
+            if (!window.cachedData.sections[0].header) {
+                window.cachedData.sections[0].header = heading;
+            }
+            window.cachedData.subtitle = subheading;
+
+            localStorage.setItem('cachedData', JSON.stringify(window.cachedData));
+            console.log('Updated cachedData:', window.cachedData);
+        }
+
+        // Handle adding text or bullet item
+        document.getElementById('addItem').addEventListener('click', function () {
+            const itemType = document.getElementById('itemType').value;
+            const text = inputText.value.trim();
+            if (text === '') return;
+
+            const content = { type: itemType, text: text };
+
+            // Ensure that sections have a content array
+            if (window.cachedData.sections.length === 0 || !window.cachedData.sections[0].content) {
+                window.cachedData.sections.push({ header: '', content: [] });
+            }
+
+            window.cachedData.sections[0].content.push(content);
+            localStorage.setItem('cachedData', JSON.stringify(window.cachedData));
+
+            // Update fake phone display
+            const newContent = document.createElement('p');
+            newContent.textContent = `${itemType === 'text' ? '' : '• '}${text}`;
+            fakePhoneDisplay.appendChild(newContent);
+
+            inputText.value = ''; // Clear input after adding
+        });
+
+        // Handle add button inside popup
+        document.getElementById('popupAddBtn').addEventListener('click', function () {
+            const newItem = newItemInput.value.trim();
+            if (newItem === '') return;
+
+            if (currentAddContext === 'heading') {
+                const newOption = document.createElement('option');
+                newOption.value = newItem;
+                newOption.textContent = newItem;
+                headingSelect.appendChild(newOption);
+                headingSelect.value = newItem;
+
+                topics.push({ label: newItem, subtopics: [] });
+                clearSubheadingDropdown();
+            } else if (currentAddContext === 'subheading') {
+                const newOption = document.createElement('option');
+                newOption.value = newItem;
+                newOption.textContent = newItem;
+                subheadingSelect.appendChild(newOption);
+                subheadingSelect.value = newItem;
+
+                const selectedTopic = topics.find(topic => topic.label === headingSelect.value);
+                if (selectedTopic) {
+                    selectedTopic.subtopics.push(newItem);
+                    updateLocalStorage();
+                }
+            }
+
+            fakePhoneHeading.textContent = `${headingSelect.value} - ${subheadingSelect.value}`;
+            closePopup();
+        });
+
+        // Handle cancel button in popup
+        document.getElementById('popupCancelBtn').addEventListener('click', function () {
+            closePopup();
+        });
+
+        // Function to clear subheading dropdown when a new heading is selected
+        function clearSubheadingDropdown() {
+            subheadingSelect.innerHTML = '<option value="">Select a subheading</option><option value="new">New Subheading</option>';
+            const selectedTopic = topics.find(topic => topic.label === headingSelect.value);
+            if (selectedTopic) {
+                selectedTopic.subtopics.forEach(subtopic => {
+                    const option = document.createElement('option');
+                    option.value = subtopic;
+                    option.textContent = subtopic;
+                    subheadingSelect.appendChild(option);
+                });
+            }
+        }
+
+       // Add heading icon click handler
+       addHeadingIcon.addEventListener('click', function() {
+            currentAddContext = 'heading'; // Set context to heading
+            openPopup();
+        });
+
+        // Add subheading icon click handler
+        addSubheadingIcon.addEventListener('click', function() {
+            currentAddContext = 'subheading'; // Set context to subheading
+            openPopup();
+        });
+    
+
+        // Handle "Create New Record" button click
+        document.getElementById('createnewrecord').addEventListener('click', function () {
+            if (headingSelect.value && subheadingSelect.value) {
+                const record = JSON.parse(localStorage.getItem('cachedData'));
+                console.log('Submitting record:', record);
+                // Submit the record (you can add Firestore submission code here)
+            } else {
+                alert('Please select both heading and subheading.');
+            }
+        });
+
+// Populate Dropdown
+const populateDropdownCreate = (topics) => {
+
+    // Clear existing options and add default "Select a heading"
+    headingSelect.innerHTML = '<option value="">Select a heading or use ➕ to create one</option><option value="new">New Heading</option>';
+    subheadingSelect.innerHTML = '<option value="">Use ➕ to create a subheading</option>';
+
+    topics.forEach((topic, index) => {
+        const option = document.createElement('option');
+        option.value = index; // Set the index as value to reference later
+        option.textContent = topic.label; // Use the label from Firebase data
+        headingSelect.appendChild(option);
+    });
+
+    // When heading is changed, clear and load corresponding subtopics
+    headingSelect.addEventListener('change', function () {
+        const selectedIndex = this.value;
+
+        // Clear subheading if no valid heading is selected
+        if (!selectedIndex || selectedIndex === "new") {
+            subheadingSelect.innerHTML = '<option value="">Select</option>';
+            updateCachedData(headingSelect.value, ''); // Clear subheading in cache
+            return;
+        }
+
+        const selectedTopic = topics[selectedIndex];
+        subheadingSelect.innerHTML = '<option value="">Select a subheading</option>'; // Reset the subheading
+
+        // Populate subtopics from the selected topic
+        selectedTopic.subtopics.forEach(subtopic => {
+            const subOption = document.createElement('option');
+            subOption.value = subtopic;
+            subOption.textContent = subtopic;
+            subheadingSelect.appendChild(subOption);
+        });
+
+        // Default to clear subheading in cache
+        updateCachedData(topics[selectedIndex].label, '');
+    });
+};
+
+// Update localStorage and cached data with heading and subheading
+const updateCachedData = (heading, subheading) => {
+    // Get localStorage data or initialize it if it doesn't exist
+    let storedData = localStorage.getItem('cachedData');
+    let cachedData = storedData ? JSON.parse(storedData) : {
+        title: '',
+        subtitle: '',
+        sections: [{ header: '', content: [] }],
+        docId: null
+    };
+
+    // Update the cached data structure
+    cachedData.title = heading;
+    cachedData.subtitle = subheading;
+
+    // Save updated data to localStorage
+    localStorage.setItem('cachedData', JSON.stringify(cachedData));
+
+    console.log('Cached Data after update:', cachedData);
+
+    // Call the render function in main.js to update the UI
+};
+
+    </script>
+</body>
+</html>

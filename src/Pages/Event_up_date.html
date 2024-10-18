@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Carousel</title>
+    <script type="module" src="../../index.js"></script>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="../../style.css">
+  
+    <style>
+        /* CSS Section */
+        html,
+        body,
+        main {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        .hideLeft, .prevLeftSecond, .prev, .selected, .next, .nextRightSecond, .hideRight {
+            display: inline-block;
+            width: 100px; /* Adjust width as per your need */
+            height: 100px; /* Adjust height as per your need */
+            opacity: 1;
+        }
+
+        #carousel {
+            position: relative;
+            height: 400px;
+            top: 50%;
+            transform: translateY(0%);
+            transform: translateX(-10%);
+            overflow: hidden;
+        }
+
+        #carousel div {
+            position: absolute;
+            transition: transform 1s, left 1s, opacity 1s, z-index 0s;
+            opacity: 1;
+        }
+
+        #carousel div img {
+            width: 400px;
+            transition: width 1s;
+        }
+
+        #carousel div.hideLeft {
+            left: 0%;
+            opacity: 0;
+            transform: translateY(50%) translateX(-50%);
+        }
+
+        #carousel div.hideLeft img {
+            width: 200px;
+        }
+
+        #carousel div.hideRight {
+            left: 100%;
+            opacity: 0;
+            transform: translateY(50%) translateX(-50%);
+        }
+
+        #carousel div.hideRight img {
+            width: 200px;
+        }
+
+        #carousel div.prev {
+            z-index: 5;
+            left: 30%;
+            transform: translateY(50px) translateX(-50%);
+        }
+
+        #carousel div.prev img {
+            width: 300px;
+        }
+
+        #carousel div.prevLeftSecond {
+            z-index: 4;
+            left: 15%;
+            transform: translateY(50%) translateX(-50%);
+            opacity: 0.7;
+        }
+
+        #carousel div.prevLeftSecond img {
+            width: 200px;
+        }
+
+        #carousel div.selected {
+            z-index: 10;
+            left: 50%;
+            transform: translateY(0px) translateX(-50%);
+        }
+
+        #carousel div.next {
+            z-index: 5;
+            left: 70%;
+            transform: translateY(50px) translateX(-50%);
+        }
+
+        #carousel div.next img {
+            width: 300px;
+        }
+
+        #carousel div.nextRightSecond {
+            z-index: 4;
+            left: 85%;
+            transform: translateY(50%) translateX(-50%);
+            opacity: 0.7;
+        }
+
+        #carousel div.nextRightSecond img {
+            width: 200px;
+        }
+
+        .buttonscarousel {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 10px;
+        }
+
+        /* Ghost image for empty image slot with Add Button
+        .ghost {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.2;
+            border: 2px dashed #0d0c0c;
+            width: 400px;
+            height: 400px;
+            background-color: transparent;
+            position: relative;
+        }
+             */     
+
+        /* Default ghost style */
+    /* Default ghost style */
+    .ghost {
+    border: 2px dashed #ccc;
+    height: 200px;  /* Example height */
+    width: 200px;   /* Example width */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+    position: relative;  /* Allows positioning of pseudo-elements */
+    }
+
+/* Use pseudo-elements to show numbers */
+/* Use pseudo-elements to show numbers */
+.ghost::before {
+    content: attr(data-number);  /* Get the number from the data attribute */
+    font-size: 100px;  /* Font size for the number */
+    color: rgba(0, 0, 0, 0.1);  /* Light color for the number */
+    position: absolute;  /* Position the number */
+    top: 50%;  /* Center vertically */
+    left: 50%;  /* Center horizontally */
+    transform: translate(-50%, -50%);  /* Adjust for center alignment */
+    z-index: 0;  /* Behind the content */
+}
+
+/* Specific ghost styles to ensure unique number display */
+#viewpicfirst.ghost {
+    background-color: #f9f9f9;  /* Optional: could add a different background color */
+}
+
+#viewpicsecond.ghost {
+    background-color: #f9f9f9;  /* Optional */
+}
+
+#viewpicthird.ghost {
+    background-color: #f9f9f9;  /* Optional */
+}
+
+#viewpicfourth.ghost {
+    background-color: #f9f9f9;  /* Optional */
+}
+
+/* Repeat as necessary for additional ghosts */
+        .ghost input {
+            display: none;
+        }
+
+        .ghost button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* Delete button */
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+            z-index: 100;
+        }
+    </style>
+      <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="./Home.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h2 class="subheading">Update Events Below</h2>
+
+        <div id="carousel">
+            <div id="viewpicfirst" class="hideLeft">
+                <img id="picfirst" alt="Image 1" />
+                <button class="delete-btn" data-img-id="Events/1/Pics.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicsecond" class="prevLeftSecond">
+                <img id="picsecond" alt="Image 2" />
+                <button class="delete-btn" data-img-id="Events/2/pic2.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicthird" class="prev">
+                <img id="picthird" alt="Image 3" />
+                <button class="delete-btn" data-img-id="Events/3/pic3.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicfourth" class="selected">
+                <img id="picfourth" alt="Image 4" />
+                <button class="delete-btn" data-img-id="Events/4/pic4.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicfifth" class="next">
+                <img id="picfifth" alt="Image 5" />
+                <button class="delete-btn" data-img-id="Events/5/pic5.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicsixth" class="nextRightSecond">
+                <img id="picsixth" alt="Image 6" />
+                <button class="delete-btn" data-img-id="Events/6/pic6.jpg">Delete</button>
+            </div>
+        
+            <div id="viewpicseventh" class="hideRight">
+                <img id="picseventh" alt="Image 7" />
+                <button class="delete-btn" data-img-id="Events/7/pic7.jpg">Delete</button>
+            </div>
+        </div>
+
+        <div class="buttonscarousel">
+            <button id="prev">Prev</button>
+            <button id="next">Next</button>
+        </div>
+    </div>
+
+    <script>
+         // Function to move to the selected element (including ghost)
+     // Function to move to the selected element (including ghost)
+     function moveToSelected(element) {
+        var selected;
+
+        // Determine whether we're moving next, previous, or selecting a specific element
+        if (element === "next") {
+            selected = $(".selected").next();
+        } else if (element === "prev") {
+            selected = $(".selected").prev();
+        } else {
+            selected = element;
+        }
+
+        // Set up variables for adjacent elements (next, prev, etc.)
+        var next = $(selected).next();
+        var prev = $(selected).prev();
+        var prevSecond = $(prev).prev();
+        var nextSecond = $(next).next();
+
+        // Function to handle applying classes (with ghost check)
+        function applyClasses(element, newClass) {
+            if ($(element).hasClass("ghost")) {
+                $(element).removeClass().addClass(newClass + " ghost");
+            } else {
+                $(element).removeClass().addClass(newClass);
+            }
+        }
+
+        // Apply class for the selected element
+        applyClasses(selected, "selected");
+
+        // Apply classes for adjacent elements
+        applyClasses(prev, "prev");
+        applyClasses(next, "next");
+        applyClasses(prevSecond, "prevLeftSecond");
+        applyClasses(nextSecond, "nextRightSecond");
+
+        // Hide elements beyond the immediate next/previous ones and apply ghost if needed
+        $(nextSecond).nextAll().each(function () {
+            applyClasses(this, 'hideRight');
+        });
+
+        $(prevSecond).prevAll().each(function () {
+            applyClasses(this, 'hideLeft');
+        });
+    }
+
+    // Keyboard Events
+    $(document).keydown(function (e) {
+        switch (e.which) {
+            case 37: // left arrow
+                moveToSelected('prev');
+                break;
+            case 39: // right arrow
+                moveToSelected('next');
+                break;
+            default:
+                return;
+        }
+        e.preventDefault();
+    });
+
+    // Click Events
+    $('#carousel div').click(function () {
+        moveToSelected($(this));
+    });
+
+    $('#prev').click(function () {
+        moveToSelected('prev');
+    });
+
+    $('#next').click(function () {
+        moveToSelected('next');
+    });
+
+    // Delete button event handler
+    $(".delete-btn").click(function () {
+        var imagePath = $(this).data("img-id"); // Get the image path from the data attribute
+        var parentDiv = $(this).parent();
+
+        // Call the globally accessible deleteImage function with the dynamic image path
+        window.deleteImage(imagePath, parentDiv);
+    });
+
+    $(document).on("click", ".add-btn", function () {
+    const parentDiv = $(this).parent(); // Get the parent div of the button
+    const inputFile = parentDiv.find("input[type='file']"); // Find the corresponding input file in the parent div
+
+    // Trigger the file input click
+    inputFile.click();
+});
+
+// Handle file input change to upload the image
+$(document).on("change", "input[type='file']", function (event) {
+    const file = event.target.files[0];
+    const parentDiv = $(this).parent(); // Get the parent div of the file input
+    const imgId = $(this).prev(".add-btn").data("img-id"); // Get the corresponding data-img-id
+
+    // Call the uploadImage function (now globally available)
+    uploadImage(file, imgId);
+});
+
+
+    </script>
+</body>
+</html>

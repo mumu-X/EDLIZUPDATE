@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Record</title>
+    
+     <script type="module" src="../../index.js"></script>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h2 class="subheading">Choose Disease To Update</h2>
+
+        <div class="content">
+            <div class="input-section">
+
+                <div id="topicsContainer" class="topics-container">
+                    
+                    <label for="heading">Heading:</label>
+                    <select id="heading">
+                        <option value="">Select a heading</option>
+                    </select>
+                    
+                    <label for="subheading">Subheading:</label>
+                    <select id="subheading">
+                        <option value="">Select a subheading</option>
+                    </select>
+                    
+
+                </div>
+
+                <div class="add-item-section">
+                    <label for="itemType">Add Item:</label>
+                    <select id="itemType">
+                        <option value="text">Text</option>
+                        <option value="bullet">Bullet</option>
+                        <option value="numberbullet">number bullet</option>
+                        <option value="Titleheading">Title heading</option>
+                        <option value="sectionheading">section heading</option>
+                    </select>
+                    <button id="addItem">+</button>
+                </div>
+
+                <textarea id="inputText" placeholder="Input text here"></textarea>
+            </div>
+
+            <div class="phone">
+                <div class="phone-screen">
+                    <div id="fakePhoneHeading" class="phone-heading">
+                        <!-- Heading and Subheading will appear here -->
+                    </div>
+                    <div id="fakePhoneDisplay" class="display-section">
+                        <!-- Added content will appear here -->
+                    </div>
+                </div>
+                <button id="submitChanges"  class="submit-btn">Submit Changes</button>
+            </div>
+
+            <!-- Submit button -->
+
+        </div>
+
+        <footer>
+            <p>Select and add content.</p>
+        </footer>
+    </div>
+
+    <script src="../../main.js"></script>
+    <script>
+
+    // Function to populate the heading dropdown
+const populateDropdown = (topics) => {
+    const headingSelect = document.getElementById('heading');
+    const subheadingSelect = document.getElementById('subheading');
+
+    // Clear existing options
+    headingSelect.innerHTML = '';
+
+    topics.forEach((topic) => {
+        const option = document.createElement('option');
+        option.value = topic.label; // Use the label as value to preserve data consistency
+        option.textContent = topic.label; // Use the label from Firebase data
+        headingSelect.appendChild(option);
+    });
+
+    // Listen for heading change to update subtopics
+    headingSelect.addEventListener('change', function() {
+        const selectedHeading = headingSelect.value; // Get selected heading value (label)
+
+        // Find the selected topic in topics array
+        const selectedTopic = topics.find(topic => topic.label === selectedHeading);
+
+        // Clear existing subtopics and populate new ones
+        subheadingSelect.innerHTML = '';
+        selectedTopic.subtopics.forEach(subtopic => {
+            const subOption = document.createElement('option');
+            subOption.value = subtopic;
+            subOption.textContent = subtopic;
+            subheadingSelect.appendChild(subOption);
+        });
+
+        // Trigger subtopic data fetch if both heading and subheading are selected
+        updateData();
+    });
+
+    // Trigger update data whenever subheading changes
+    subheadingSelect.addEventListener('change', updateData);
+
+    // Trigger initial population and data fetch
+    headingSelect.dispatchEvent(new Event('change'));
+};
+
+// Update the data fetch based on the selected heading and subheading
+// Update the data fetch based on the selected heading and subheading
+// Update the data fetch based on the selected heading and subheading
+function updateData() {
+    const selectedHeading = document.getElementById('heading').value;
+    const selectedSubheading = document.getElementById('subheading').value;
+
+    if (selectedHeading !== '' && selectedSubheading !== '') {
+        // Clear the display and fetch new data
+        clearFakePhoneDisplay();
+        fetchSubheadingData(selectedSubheading, selectedHeading);
+    }
+}
+
+
+
+    
+    
+    
+    </script>
+</body>
+</html>

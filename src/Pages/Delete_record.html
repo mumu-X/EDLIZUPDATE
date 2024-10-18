@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Record</title>
+    <script type="module" src="../../index.js"></script>
+    <!-- Link FontAwesome for icons -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h2 class="subheading">Delete Record</h2>
+
+        <div class="content">
+            <div class="input-section">
+
+                <div id="topicsContainer" class="topics-container">
+                    
+                    <label for="heading">Heading:</label>
+                    <select id="heading">
+                        <option value="">Select a heading</option>
+                    </select>
+                    
+                    <label for="subheading">Subheading:</label>
+                    <select id="subheading">
+                        <option value="">Select a subheading</option>
+                    </select>
+                    
+
+                </div>
+
+                <div class="add-item-section">
+                    <label for="itemType">Add Item:</label>
+                    <select id="itemType">
+                        <option value="text">Text</option>
+                        <option value="bullet">Bullet</option>
+                    </select>
+                    <button id="addItem">+</button>
+                </div>
+
+                <textarea id="inputText" placeholder="Input text here"></textarea>
+            </div>
+
+            <div class="phone">
+                <div class="phone-screen">
+                    <div id="fakePhoneHeading" class="phone-heading">
+                        <!-- Heading and Subheading will appear here -->
+                    </div>
+                    <div id="fakePhoneDisplay" class="display-section">
+                        <!-- Added content will appear here -->
+                    </div>
+                </div>
+                <div class="delete-section">
+                    <!-- Trash can delete icon -->
+                    <button id="deleteButton" class="delete-btn">
+                        <i class="fas fa-trash"></i>
+                        <span>Delete?</span>
+                    </button>
+                </div>
+            </div>
+
+        <footer>
+            <p>Select a record to delete.</p>
+        </footer>
+    </div>
+
+    <script src="../../main.js"></script>
+</body>
+</html>
