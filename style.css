@@ -16,6 +16,10 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
+/* Add this CSS to your stylesheet or inside a <style> tag */
+.selected {
+    background-color: yellow;
+}
 
 header {
     text-align: center;
@@ -145,8 +149,8 @@ button:hover {
 
     padding: 20px;
 
-    width: 375px; /* iPhone X width */
-    height: 612px; /* iPhone X height */
+    width: 325px; /* iPhone X width */
+    height: 700px; /* iPhone X height */
     border: 2px solid #ddd;
     border-radius: 30px;
     padding: 15px;
@@ -170,6 +174,20 @@ button:hover {
     gap: 10px;
     overflow-y: scroll; /* Enable scrolling inside the phone */
     box-shadow: inset 0px 2px 6px rgba(0, 0, 0, 0.1); /* Shadow for inner content */
+}
+
+/* Notch styling */
+.phone-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px; /* Width of the notch */
+    height: 30px; /* Height of the notch */
+    background-color: black; /* Same as background to blend in */
+    border-radius: 0 0 15px 15px; /* Rounded bottom edges */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Slight shadow for realism */
 }
 
 .display-section {

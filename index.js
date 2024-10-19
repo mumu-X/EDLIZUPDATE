@@ -4,15 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Firestore, getFirestore, setDoc, doc, collection, getDoc,query, where,getDocs, updateDoc } from "firebase/firestore";
 import { deleteObject, getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCxSruCUGov5UTLY1An081gsAVjTFuKoNI",
-  authDomain: "edliz-2.firebaseapp.com",
-  projectId: "edliz-2",
-  storageBucket: "edliz-2.appspot.com",
-  messagingSenderId: "1013049259286",
-  appId: "1:1013049259286:web:1fcd8e8f982b6dc9568c37",
-  measurementId: "G-HXQQHWQEDL"
-};
+
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
@@ -24,10 +16,10 @@ const app = initializeApp(firebaseConfig);
 
 
         // Caching data
-        let cachedData = {
+        let cachedData = JSON.parse(localStorage.getItem('cachedData')) || {
             title: '',
             subtitle: '',
-            sections: [{ header: '', content: [] }], // Ensure sections array has at least one object
+            sections: [{ header: '', content: [] }],
             docId: null
         };
         
@@ -165,26 +157,19 @@ const fetchSubheadingData = async (subheading, heading) => {
                 console.log('Data fetched:', docData);
                 const docId = doc.id;
 
-                // Get localStorage data or initialize it if it doesn't exist
-                const storedData = localStorage.getItem('cachedData');
-                let cachedData = storedData ? JSON.parse(storedData) : {
-                    title: '',
-                    subtitle: '',
-                    sections: [{ header: '', content: [] }],
-                    docId: null
-                };
+                // Clear previous cached data in localStorage
+                localStorage.removeItem('cachedData');
 
-                // Merge the fetched data into cachedData
-                cachedData = {
-                    ...cachedData, // Preserve existing local cached data
-                    title: docData.title || cachedData.title,
-                    subtitle: docData.subtitle || cachedData.subtitle,
-                    docId: docId,
-                    sections: docData.sections?.length > 0 ? docData.sections : cachedData.sections
-                };
+// Create new cachedData based on fetched data
+cachedData = {
+    title: docData.title || '',
+    subtitle: docData.subtitle || '',
+    docId: docId,
+    sections: docData.sections || [{ header: '', content: [] }]
+};
 
-                // Save merged data to localStorage
-                localStorage.setItem('cachedData', JSON.stringify(cachedData));
+// Save new cached data to localStorage as a string
+localStorage.setItem('cachedData', JSON.stringify(cachedData));
 
                 console.log('Cached Data after fetching:', cachedData);
 
@@ -199,7 +184,7 @@ const fetchSubheadingData = async (subheading, heading) => {
     }
 };
 
-function clearFakePhoneDisplay(message) {
+/*function clearFakePhoneDisplay(message) {
     const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
     fakePhoneDisplay.innerHTML = ''; // Clear previous content
 
@@ -209,63 +194,12 @@ function clearFakePhoneDisplay(message) {
     errorMessage.style.fontWeight = "bold";
     errorMessage.style.textAlign = "center";
     fakePhoneDisplay.appendChild(errorMessage);
-}
+}*/
 
 window.fetchSubheadingData = fetchSubheadingData;
 window.cachedData = {}; // Initialize global cachedData
 
 
-    // Function to populate the heading dropdown
-    const populateDropdown = (topics) => {
-        const headingSelect = document.getElementById('heading');
-        const subheadingSelect = document.getElementById('subheading');
-    
-        // Clear existing options
-        headingSelect.innerHTML = '';
-    
-        topics.forEach((topic) => {
-            const option = document.createElement('option');
-            option.value = topic.label; // Use the label as value to preserve data consistency
-            option.textContent = topic.label; // Use the label from Firebase data
-            headingSelect.appendChild(option);
-        });
-    
-        // Listen for heading change to update subtopics
-        headingSelect.addEventListener('change', function() {
-            const selectedHeading = headingSelect.value; // Get selected heading value (label)
-    
-            // Find the selected topic in topics array
-            const selectedTopic = topics.find(topic => topic.label === selectedHeading);
-    
-            // Clear existing subtopics and populate new ones
-            subheadingSelect.innerHTML = '';
-            selectedTopic.subtopics.forEach(subtopic => {
-                const subOption = document.createElement('option');
-                subOption.value = subtopic;
-                subOption.textContent = subtopic;
-                subheadingSelect.appendChild(subOption);
-            });
-    
-            // Trigger subtopic data fetch if both heading and subheading are selected
-            updateData();
-        });
-    
-        // Trigger update data whenever subheading changes
-        subheadingSelect.addEventListener('change', updateData);
-    
-        // Trigger initial population and data fetch
-        headingSelect.dispatchEvent(new Event('change'));
-    };
-    
-    // Update the data fetch based on the selected heading and subheading
-    function updateData() {
-        const selectedHeading = document.getElementById('heading').value;
-        const selectedSubheading = document.getElementById('subheading').value;
-    
-        if (selectedHeading !== '' && selectedSubheading !== '') {
-            fetchSubheadingData(selectedSubheading, selectedHeading); // Fetch data with both heading and subheading
-        }
-    }
 
 
 /*window.onload = function() {
