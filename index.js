@@ -4,15 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Firestore, getFirestore, setDoc, doc, collection, getDoc,query, where,getDocs, updateDoc } from "firebase/firestore";
 import { deleteObject, getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCxSruCUGov5UTLY1An081gsAVjTFuKoNI",
-    authDomain: "edliz-2.firebaseapp.com",
-    projectId: "edliz-2",
-    storageBucket: "edliz-2.appspot.com",
-    messagingSenderId: "1013049259286",
-    appId: "1:1013049259286:web:1fcd8e8f982b6dc9568c37",
-    measurementId: "G-HXQQHWQEDL"
-  };
+
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
