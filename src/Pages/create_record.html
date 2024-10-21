@@ -71,8 +71,7 @@
                     <label for="subheading">Subheading:</label>
                     <div style="display: flex; align-items: center;">
                         <select id="subheading">
-                            <option value="">Select a subheading</option>
-                            <option value="new">New Subheading</option>
+                            <option value="">Select a heading or use ➕ to create one</option>
                         </select>
                         <span id="addSubheadingIcon" class="add-icon">➕</span>
                     </div>
@@ -83,6 +82,10 @@
                     <select id="itemType">
                         <option value="text">Text</option>
                         <option value="bullet">Bullet</option>
+                        <option value="numberbullet">number bullet</option>
+                        <option value="Titleheading">Title heading</option>
+                        <option value="sectionheading">section heading</option>
+                        <option value="paragraph">paragraph</option>
                     </select>
                     <button id="addItem">+</button>
                 </div>
@@ -117,10 +120,6 @@
     <script src="../../main.js"></script>
     <script>
 
-let cacheArray = {
-    maintopic: '',
-    subtopic: {subtopics:[] },
-};
 
         // Example topics definition (assuming you already have this in cache)
  const topics = [];
@@ -135,6 +134,15 @@ let cacheArray = {
         const newItemInput = document.getElementById('newItemInput');
         let currentAddContext = null;
 
+        function updatePhoneHeading() {
+    const heading = document.getElementById('heading').value;
+    const subheading = document.getElementById('subheading').value;
+    const fakePhoneHeading = document.getElementById('fakePhoneHeading');
+
+
+    fakePhoneHeading.textContent = `${heading} - ${subheading}`;
+};
+
         // Function to show the pop-up
         function openPopup() {
             popup.style.display = 'block';
@@ -145,47 +153,6 @@ let cacheArray = {
         function closePopup() {
             popup.style.display = 'none';
         }
-
-        // Function to update local storage with new headings and subheadings
-        function updateLocalStorage() {
-            const heading = headingSelect.value;
-            const subheading = subheadingSelect.value;
-
-            if (heading === '' || subheading === '') return;
-
-            // Ensure cachedData has the correct structure
-            if (!window.cachedData.sections[0].header) {
-                window.cachedData.sections[0].header = heading;
-            }
-            window.cachedData.subtitle = subheading;
-
-            localStorage.setItem('cachedData', JSON.stringify(window.cachedData));
-            console.log('Updated cachedData:', window.cachedData);
-        }
-
-        // Handle adding text or bullet item
-        document.getElementById('addItem').addEventListener('click', function () {
-            const itemType = document.getElementById('itemType').value;
-            const text = inputText.value.trim();
-            if (text === '') return;
-
-            const content = { type: itemType, text: text };
-
-            // Ensure that sections have a content array
-            if (window.cachedData.sections.length === 0 || !window.cachedData.sections[0].content) {
-                window.cachedData.sections.push({ header: '', content: [] });
-            }
-
-            window.cachedData.sections[0].content.push(content);
-            localStorage.setItem('cachedData', JSON.stringify(window.cachedData));
-
-            // Update fake phone display
-            const newContent = document.createElement('p');
-            newContent.textContent = `${itemType === 'text' ? '' : '• '}${text}`;
-            fakePhoneDisplay.appendChild(newContent);
-
-            inputText.value = ''; // Clear input after adding
-        });
 
        // Handle adding a new heading or subheading from the popup
        document.getElementById('popupAddBtn').addEventListener('click', function () {
@@ -200,15 +167,29 @@ let cacheArray = {
         newOption.value = topics.length;  // Use the current length as the new index
         newOption.textContent = newItem;
         headingSelect.appendChild(newOption);
-        headingSelect.value = newOption.value;  // Automatically select the newly added heading
+        headingSelect.value = topics.length;  // Automatically select the newly added heading
 
         // Push new heading to topics array
-        const newTopic = { label: newItem, subtopics: [] };
+        const newTopic = { maintopic: newItem, subtopics: [] };
         topics.push(newTopic);
+
+        console.log('new arrayCache', topics);
+
         localStorage.setItem('arrayCache', JSON.stringify(topics));
+
+        
 
         // Clear the subheading dropdown since this is a new heading
         clearSubheadingDropdown();
+
+         // Also update cachedData to reflect the new heading
+         updateCachedData(newItem, '');
+
+         console.log('Added new heading:', newItem);
+
+         updatePhoneHeading()
+
+
 
     } else if (currentAddContext === 'subheading') {
         // Add new subheading to the selected heading
@@ -233,14 +214,16 @@ let cacheArray = {
             subheadingSelect.value = newItem;
 
             // Update cachedData
-            updateCachedData(selectedTopic.label, newItem);
+            updateCachedData(selectedTopic.maintopic, newItem);
         } else {
             console.error('Selected topic is undefined. Cannot add subheading.');
         }
+
+        updatePhoneHeading()
+        
     }
 
-    // Update the fake phone UI with the selected heading and subheading
-    fakePhoneHeading.textContent = `${headingSelect.value} - ${subheadingSelect.value}`;
+    //console.log('Added new heading:', arrayCache);
 
     closePopup();
 });
@@ -276,18 +259,6 @@ let cacheArray = {
             openPopup();
         });
     
-
-        // Handle "Create New Record" button click
-        document.getElementById('createnewrecord').addEventListener('click', function () {
-            if (headingSelect.value && subheadingSelect.value) {
-                const record = JSON.parse(localStorage.getItem('cachedData'));
-                console.log('Submitting record:', record);
-                // Submit the record (you can add Firestore submission code here)
-            } else {
-                alert('Please select both heading and subheading.');
-            }
-        });
-
 // Populate Dropdown
 const populateDropdownCreate = (topics) => {
     const headingSelect = document.getElementById('heading');
@@ -317,7 +288,7 @@ const populateDropdownCreate = (topics) => {
         }
 
         const selectedTopic = topics[selectedIndex];
-        subheadingSelect.innerHTML = '<option value="">Select a subheading</option>';  // Reset subheading
+        subheadingSelect.innerHTML = '<option value="">Use ➕ to create one</option>';  // Reset subheading
 
         // Populate subtopics
         selectedTopic.subtopics.forEach(subtopic => {
@@ -333,17 +304,17 @@ const populateDropdownCreate = (topics) => {
 };
 
 // Update localStorage and cached data with heading and subheading
+// Update localStorage and cached data with heading and subheading
 const updateCachedData = (heading, subheading) => {
-    // Get localStorage data or initialize if it doesn't exist
-    let storedData = localStorage.getItem('cachedData');
-    let cachedData = storedData ? JSON.parse(storedData) : {
+    // Clear the local cache by reinitializing cachedData
+    let cachedData = {
         title: '',
         subtitle: '',
         sections: [{ header: '', content: [] }],
         docId: null
     };
 
-    // Update cached data
+    // Update cached data with new heading and subheading
     cachedData.title = heading;
     cachedData.subtitle = subheading;
 
@@ -355,7 +326,28 @@ const updateCachedData = (heading, subheading) => {
 
 
 
+// Submit button action
+document.getElementById('createnewrecord').addEventListener('click', async function () {
+    const updatedCachedData = JSON.parse(localStorage.getItem('cachedData'));
+    const updatedtopicsArray = JSON.parse(localStorage.getItem('arrayCache'));
 
+    try {
+        await window.updatetopicsheading(updatedtopicsArray, updatedCachedData);
+        console.log("Data successfully updated!");
+
+        // Display success message on the phone screen
+        const phoneDisplay = document.getElementById('fakePhoneDisplay');
+        phoneDisplay.innerHTML = ''; // Clear the existing display
+
+        const successMessage = document.createElement('div');
+        successMessage.classList.add('success-message');
+        successMessage.textContent = 'Document successfully updated!';
+        phoneDisplay.appendChild(successMessage);
+
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
+});
     </script>
 </body>
 </html>

@@ -382,3 +382,64 @@ button:hover {
     padding: 5px 10px;
     z-index: 100;
 }
+
+
+
+
+
+
+
+
+
+
+
+/* Common style for all items */
+.display-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    position: relative;
+    border-radius: 5px;
+}
+
+/* Styles for specific item types */
+.item-text {
+    font-size: 1em;
+    color: #333;
+}
+
+.item-bullet {
+    font-size: 1em;
+    color: #007BFF;
+    margin-left: 20px;
+}
+
+.item-numberbullet {
+    font-size: 1em;
+    list-style-type: decimal;
+    margin-left: 20px;
+}
+
+.item-Titleheading {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+.item-sectionheading {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #555;
+    margin-top: 10px;
+}
+
+.item-paragraph {
+    font-size: 1em;
+    line-height: 1.5;
+    color: #444;
+    text-align: justify;
+}

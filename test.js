@@ -1,484 +1,340 @@
-let editingItem = null;
-let dragSrcEl = null;
-let draggingIndex = null;
-// Caching data
-
-
-// Function to populate the fake phone with data (from Firestore)
-
-
-// Updated renderDataInFakePhone function to ensure correct index assignment
-const renderDataInFakePhone = (data) => {
-   
-    
-    const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
-    fakePhoneDisplay.innerHTML = ''; // Clear the current display
-    console.log('Data to render in function:', data); // Log the data passed to render function
-
-    // Check if sections exist
-    if (!data.sections || !Array.isArray(data.sections) || data.sections.length === 0) {
-        console.error('No sections available to render');
-        clearFakePhoneDisplay('No data available.');
-        return; // Exit early if there are no sections to render
-    }
-
-    // Render sections and add functionality for each item
-    data.sections.forEach((section, sectionIndex) => {
-        if (!section.content || !Array.isArray(section.content)) {
-            console.error(`Section ${sectionIndex} has no content or is not an array`);
-            return; // Exit if the section content is invalid
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Record</title>
+    <script type="module" src="../../index.js"></script>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        /* Add styles for the new pop-up */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .popup input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup .add-btn, .popup .cancel-btn {
+            padding: 5px 10px;
+            cursor: pointer;
         }
 
-        section.content.forEach((item, contentIndex) => {
-            const displayItem = document.createElement('div');
-            displayItem.classList.add('display-item');
-            displayItem.setAttribute('draggable', true); // Enable dragging
+        /* Styling for the plus icons */
+        .add-icon {
+            cursor: pointer;
+            font-size: 20px;
+            margin-left: 10px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EDLIZ UPDATE</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#">Instructions</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </nav>
+        </header>
 
-            // Set section and content index on the display item
-            displayItem.dataset.sectionIndex = sectionIndex;
-            displayItem.dataset.contentIndex = contentIndex;
+        <h2 class="subheading">Add New Disease Record</h2>
 
-            // Create content element with the item content
-            const content = document.createElement('div');
-            content.classList.add('item-content');
-            content.textContent = item.type === 5 ? '• ' + item.text : item.text; // Handle bullet
+        <div class="content">
+            <div class="input-section">
+                <div id="topicsContainer" class="topics-container">
+                    <label for="heading">Heading:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="heading">
+                            <option value="">Select a heading or use ➕ to create one</option>
+                        </select>
+                        <span id="addHeadingIcon" class="add-icon">➕</span>
+                    </div>
 
-            // Append content to display item
-            displayItem.appendChild(content);
+                    <label for="subheading">Subheading:</label>
+                    <div style="display: flex; align-items: center;">
+                        <select id="subheading">
+                            <option value="">Select a heading or use ➕ to create one</option>
+                        </select>
+                        <span id="addSubheadingIcon" class="add-icon">➕</span>
+                    </div>
+                </div>
 
-            // Add trash icon for deleting
-            const trashIcon = document.createElement('div');
-            trashIcon.classList.add('trash-icon');
-            trashIcon.innerHTML = '🗑️';
-            trashIcon.addEventListener('click', function () {
-                const sectionIndex = displayItem.dataset.sectionIndex;
-                const contentIndex = displayItem.dataset.contentIndex;
-            
-                if (cachedData.sections[sectionIndex] && cachedData.sections[sectionIndex].content[contentIndex]) {
-                    // Remove the item from cached data
-                    cachedData.sections[sectionIndex].content.splice(contentIndex, 1);
-            
-                    // Re-render the phone display
-                    renderDataInFakePhone(cachedData); // Re-render phone display after deletion
-            
-                    // Save the updated cache to localStorage
-                    localStorage.setItem('cachedData', JSON.stringify(cachedData));
-                    console.log('Updated cachedData.sections after deletion:', cachedData.sections);
-                } else {
-                    console.error('Invalid indices during deletion');
-                }
-            
-                // Clear the selection and text input
-                editingItem = null; // Deselect any editing item
-                document.getElementById('inputText').value = ''; // Clear the text input
-            });
-            
-            displayItem.appendChild(trashIcon);
+                <div class="add-item-section">
+                    <label for="itemType">Add Item:</label>
+                    <select id="itemType">
+                        <option value="text">Text</option>
+                        <option value="bullet">Bullet</option>
+                        <option value="numberbullet">number bullet</option>
+                        <option value="Titleheading">Title heading</option>
+                        <option value="sectionheading">section heading</option>
+                        <option value="paragraph">paragraph</option>
+                    </select>
+                    <button id="addItem">+</button>
+                </div>
 
-            // Append display item to the fake phone display
-            fakePhoneDisplay.appendChild(displayItem);
+                <textarea id="inputText" placeholder="Input text here"></textarea>
+            </div>
 
-            // Enable drag and drop
-            enableDragAndDrop(displayItem);
+            <div class="phone">
+                <div class="phone-screen">
+                    <div id="fakePhoneHeading" class="phone-heading"></div>
+                    <div id="fakePhoneDisplay" class="display-section"></div>
+                </div>
+                <button id="createnewrecord" class="submit-btn">Create New Record</button>
+            </div>
+        </div>
 
-            // Enable selection of the item for editing
-            displayItem.addEventListener('click', function () {
-                handleItemSelection(displayItem);
-            });
-        });
-    });
+        <footer>
+            <p>Select and add content.</p>
+        </footer>
 
-    console.log("Section Index:", sectionIndex);
-    console.log("Content Index:", contentIndex);
-    console.log("Cached Data Sections:", cachedData.sections);
+        <!-- Popup for adding a new item -->
+        <div id="popup" class="popup">
+            <h3>Add New</h3>
+            <input type="text" id="newItemInput" placeholder="Enter new item" />
+            <div class="popup-buttons">
+                <button id="popupAddBtn" class="add-btn">Add</button>
+                <button id="popupCancelBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../main.js"></script>
+    <script>
 
 
-    // Update phone display heading and subheading if needed
-    updatePhoneHeading();
+        // Example topics definition (assuming you already have this in cache)
+ const topics = [];
+        const addHeadingIcon = document.getElementById('addHeadingIcon');
+        const addSubheadingIcon = document.getElementById('addSubheadingIcon');
+        const headingSelect = document.getElementById('heading');
+        const subheadingSelect = document.getElementById('subheading');
+        const fakePhoneHeading = document.getElementById('fakePhoneHeading');
+        const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
+        const inputText = document.getElementById('inputText');
+        const popup = document.getElementById('popup');
+        const newItemInput = document.getElementById('newItemInput');
+        let currentAddContext = null;
+
+        function updatePhoneHeading() {
+    const heading = document.getElementById('heading').value;
+    const subheading = document.getElementById('subheading').value;
+    const fakePhoneHeading = document.getElementById('fakePhoneHeading');
+
+
+    fakePhoneHeading.textContent = `${heading} - ${subheading}`;
 };
 
-// Function to clear cachedData and fakePhoneDisplay
-function clearCachedDataAndDisplay() {
-    cachedData = {
+        // Function to show the pop-up
+        function openPopup() {
+            popup.style.display = 'block';
+            newItemInput.value = ''; // Clear input
+        }
+
+        // Function to close the pop-up
+        function closePopup() {
+            popup.style.display = 'none';
+        }
+
+       // Handle adding a new heading or subheading from the popup
+       document.getElementById('popupAddBtn').addEventListener('click', function () {
+    const newItem = document.getElementById('newItemInput').value.trim();
+    if (newItem === '') return;
+
+    let topics = JSON.parse(localStorage.getItem('arrayCache')) || [];
+
+    if (currentAddContext === 'heading') {
+        // Create new heading
+        const newOption = document.createElement('option');
+        newOption.value = topics.length;  // Use the current length as the new index
+        newOption.textContent = newItem;
+        headingSelect.appendChild(newOption);
+        headingSelect.value = newItem;  // Automatically select the newly added heading
+
+        // Push new heading to topics array
+        const newTopic = { maintopic: newItem, subtopics: [] };
+        topics.push(newTopic);
+        localStorage.setItem('arrayCache', JSON.stringify(topics));
+
+        // Clear the subheading dropdown since this is a new heading
+        clearSubheadingDropdown();
+
+
+    } else if (currentAddContext === 'subheading') {
+        // Add new subheading to the selected heading
+        const selectedTopicIndex = headingSelect.value;
+
+        if (selectedTopicIndex === '') return;
+
+        const selectedTopic = topics[selectedTopicIndex];
+
+        if (selectedTopic) {
+            // Add subheading to the selected topic
+            selectedTopic.subtopics.push(newItem);
+
+            // Update local storage
+            localStorage.setItem('arrayCache', JSON.stringify(topics));
+
+            // Add subheading to dropdown
+            const subOption = document.createElement('option');
+            subOption.value = newItem;
+            subOption.textContent = newItem;
+            subheadingSelect.appendChild(subOption);
+            subheadingSelect.value = newItem;
+
+            // Update cachedData
+            updateCachedData(selectedTopic.maintopic, newItem);
+        } else {
+            console.error('Selected topic is undefined. Cannot add subheading.');
+        }
+
+        updatePhoneHeading()
+        
+    }
+
+    console.log('Added new heading:', arrayCache);
+
+    closePopup();
+});
+
+        // Handle cancel button in popup
+        document.getElementById('popupCancelBtn').addEventListener('click', function () {
+            closePopup();
+        });
+
+        // Function to clear subheading dropdown when a new heading is selected
+        function clearSubheadingDropdown() {
+            subheadingSelect.innerHTML = '<option value="">Select a subheading</option><option value="new">New Subheading</option>';
+            const selectedTopic = topics.find(topic => topic.label === headingSelect.value);
+            if (selectedTopic) {
+                selectedTopic.subtopics.forEach(subtopic => {
+                    const option = document.createElement('option');
+                    option.value = subtopic;
+                    option.textContent = subtopic;
+                    subheadingSelect.appendChild(option);
+                });
+            }
+        }
+
+       // Add heading icon click handler
+       addHeadingIcon.addEventListener('click', function() {
+            currentAddContext = 'heading'; // Set context to heading
+            openPopup();
+        });
+
+        // Add subheading icon click handler
+        addSubheadingIcon.addEventListener('click', function() {
+            currentAddContext = 'subheading'; // Set context to subheading
+            openPopup();
+        });
+    
+// Populate Dropdown
+const populateDropdownCreate = (topics) => {
+    const headingSelect = document.getElementById('heading');
+    const subheadingSelect = document.getElementById('subheading');
+
+    // Clear dropdowns and set default options
+    headingSelect.innerHTML = '<option value="">Select a heading or use ➕ to create one</option>';
+    subheadingSelect.innerHTML = '<option value="">Use ➕ to create a subheading</option>';
+
+    // Populate heading dropdown from topics
+    topics.forEach((topic, index) => {
+        const option = document.createElement('option');
+        option.value = index;  // Store index for easy access later
+        option.textContent = topic.label;  // Use label from Firestore data
+        headingSelect.appendChild(option);
+    });
+
+    // When a heading is selected, update the subheading dropdown
+    headingSelect.addEventListener('change', function () {
+        const selectedIndex = this.value;
+        
+        // Clear subheading if no valid heading is selected
+        if (!selectedIndex || selectedIndex === "new") {
+            subheadingSelect.innerHTML = '<option value="">Select a subheading</option>';
+            updateCachedData(headingSelect.value, ''); // Clear subheading in cache
+            return;
+        }
+
+        const selectedTopic = topics[selectedIndex];
+        subheadingSelect.innerHTML = '<option value="">Use ➕ to create one</option>';  // Reset subheading
+
+        // Populate subtopics
+        selectedTopic.subtopics.forEach(subtopic => {
+            const subOption = document.createElement('option');
+            subOption.value = subtopic;
+            subOption.textContent = subtopic;
+            subheadingSelect.appendChild(subOption);
+        });
+
+        // Update cache with selected heading
+        updateCachedData(selectedTopic.label, ''); // Clear subheading in cache for now
+    });
+};
+
+// Update localStorage and cached data with heading and subheading
+// Update localStorage and cached data with heading and subheading
+const updateCachedData = (heading, subheading) => {
+    // Clear the local cache by reinitializing cachedData
+    let cachedData = {
         title: '',
         subtitle: '',
         sections: [{ header: '', content: [] }],
         docId: null
     };
-    localStorage.removeItem('cachedData'); // Clear localStorage for cachedData
-    document.getElementById('fakePhoneDisplay').innerHTML = ''; // Clear fake phone display
-}
 
-// Function to clear the display but NOT the cached data
-function clearFakePhoneDisplay() {
-    document.getElementById('fakePhoneDisplay').innerHTML = ''; // Clear phone display
-}
+    // Update cached data with new heading and subheading
+    cachedData.title = heading;
+    cachedData.subtitle = subheading;
 
-
-// Add item to the phone display
-document.getElementById('addItem').addEventListener('click', function () {
-    const inputText = document.getElementById('inputText').value;
-    const itemType = document.getElementById('itemType').value;
-
-    if (inputText.trim() === "") return; // Prevent adding empty items
-
-    if (editingItem) {
-         // Editing an existing item
-         const sectionIndex = editingItem.dataset.sectionIndex;
-         const contentIndex = editingItem.dataset.contentIndex;
- 
-         // Update the cached data
-         const updatedItem = {
-             type: getTypeValue(itemType),
-             text: inputText
-         };
-         cachedData.sections[sectionIndex].content[contentIndex] = updatedItem;
-         
-        // Update the existing item instead of adding a new one update ui
-        const contentDiv = editingItem.querySelector('.item-content');
-        contentDiv.textContent = (itemType === 'bullet') ? '• ' + inputText : inputText;
-
-        // Deselect after updating
-        editingItem.classList.remove('active');
-        editingItem = null;
-    } else {
-        // Adding a new item
-        const newItem = {
-            type: getTypeValue(itemType),
-            text: inputText
-        };
-
-        // Add to cache and UI
-        addItemToCache(newItem);
-        addItemToDisplay(inputText, itemType);
-    }
-
-    // Clear input field after adding/updating
-    document.getElementById('inputText').value = "";
-});
-
-// Add new item to the display
-function addItemToDisplay(inputText, itemType) {
-    const newItem = {
-        type: getTypeValue(itemType),
-        text: inputText
-    };
-    const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
-
-    // Create display item
-    const displayItem = document.createElement('div');
-    displayItem.classList.add('display-item');
-    displayItem.setAttribute('draggable', true);
-    
-    const content = document.createElement('div');
-    content.classList.add('item-content');
-    content.textContent = (itemType === 'bullet') ? '• ' + inputText : inputText;
-
-    displayItem.appendChild(content);
-
-    // Append item to fake phone display
-    fakePhoneDisplay.appendChild(displayItem);
-
-    // Update cachedData
-    addItemToCache(newItem);
-
-    // Enable drag and drop
-    enableDragAndDrop(displayItem);
-
-    // Enable selection for editing
-    displayItem.addEventListener('click', function () {
-        handleItemSelection(displayItem);
-    });
-
-    // Re-render the entire phone display to ensure correct indices
-    renderDataInFakePhone(cachedData);
-
-
-
-}
-
-// Function to add a new item without clearing cachedData
-function addItem(type, text) {
-    const newItem = { type, text };
-
-    // Check if sections exist, and add to the appropriate section
-    if (!cachedData.sections || cachedData.sections.length === 0) {
-        cachedData.sections = [{ header: '', content: [newItem] }]; // Initialize sections if empty
-    } else {
-        cachedData.sections[0].content.push(newItem); // Add to existing content array
-    }
-
-    // Update the localStorage cache with the modified cachedData
+    // Save updated data to localStorage
     localStorage.setItem('cachedData', JSON.stringify(cachedData));
 
-    // Re-render the updated data in the phone display
-    renderDataInFakePhone(cachedData);
-}
-
-
-// Function to update cached data when editing an item
-function updateCachedData(sectionIndex, contentIndex, newText) {
-    if (cachedData.sections[sectionIndex] && cachedData.sections[sectionIndex].content[contentIndex]) {
-        cachedData.sections[sectionIndex].content[contentIndex].text = newText;
-        localStorage.setItem('cachedData', JSON.stringify(cachedData));  // Save to localStorage
-        console.log('Updated cached data:', cachedData);
-    } else {
-        console.error('Invalid section or content index for update.');
-    }
-}
+    console.log('Updated cachedData:', cachedData);
+};
 
 
 
-
-// Handle item selection for editing
-function handleItemSelection(displayItem) {
-    const sectionIndex = displayItem.dataset.sectionIndex;
-    const contentIndex = displayItem.dataset.contentIndex;
-
-    // Ensure valid indices
-    if (!cachedData.sections[sectionIndex] || !cachedData.sections[sectionIndex].content[contentIndex]) {
-        console.error('Content or section index is invalid');
-        return;
-    }
-
-    // Clear the input field and deselect previous item
-    if (editingItem) editingItem.classList.remove('active');
-
-    // Check if the same item is selected for editing
-    if (editingItem === displayItem) {
-        // Deselect the item if it's clicked again
-        displayItem.classList.remove('active');
-        document.getElementById('inputText').value = "";
-        editingItem = null;
-    } else {
-        // Select the item for editing
-        displayItem.classList.add('active');
-        editingItem = displayItem;  // Track the currently editing item
-
-        // Set the input field to the current text
-        const currentText = cachedData.sections[sectionIndex].content[contentIndex].text || '';
-        document.getElementById('inputText').value = currentText;
-        
-        // Listen for changes in the input field and update the cached data
-        const inputField = document.getElementById('inputText');
-        inputField.removeEventListener('input', updateCachedData);  // Ensure no duplicate listeners
-        inputField.addEventListener('input', function () {
-            updateCachedData(sectionIndex, contentIndex, inputField.value);
-        });
-    }
-}
-
-
-
-// Enable drag-and-drop functionality
-function enableDragAndDrop(item) {
-    item.addEventListener('dragstart', function (e) {
-        dragSrcEl = this;
-        draggingIndex = Array.from(dragSrcEl.parentNode.children).indexOf(dragSrcEl);
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
-        this.classList.add('dragging');
-    });
-
-    item.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    });
-
-    item.addEventListener('dragenter', function () {
-        this.classList.add('over');
-    });
-
-    item.addEventListener('dragleave', function () {
-        this.classList.remove('over');
-    });
-
-    item.addEventListener('drop', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const dropIndex = Array.from(this.parentNode.children).indexOf(this);
-        if (dragSrcEl !== this) {
-            // Remove dragging element and insert it at new position
-            const parent = this.parentNode;
-            if (draggingIndex < dropIndex) {
-                parent.insertBefore(dragSrcEl, this.nextSibling);
-            } else {
-                parent.insertBefore(dragSrcEl, this);
-            }
-        }
-        this.classList.remove('over');
-    });
-
-    item.addEventListener('dragend', function () {
-        this.classList.remove('dragging');
-    });
-}
-
-// Update phone display heading and subheading
-document.getElementById('heading').addEventListener('change', updatePhoneHeading);
-document.getElementById('subheading').addEventListener('change', function () {
-    const heading = document.getElementById('heading').value;
-    const subheading = this.value;
-
-    // Clear cachedData and localStorage to ensure new data is fetched fresh
-    clearCachedDataAndDisplay();
-
-
-    // Update cachedData subheading
-    cachedData.title = subheading;
-    
-    // Fetch data from Firestore and update the localStorage
-    if (heading && subheading) {
-        window.fetchSubheadingData(subheading, heading);
-    }
-});
-
-
-function updatePhoneHeading() {
-    const heading = document.getElementById('heading').value;
-    const subheading = document.getElementById('subheading').value;
-    const fakePhoneHeading = document.getElementById('fakePhoneHeading');
-
-   
-
-    // Update cached data
-    cachedData.title = heading; // Update cached title
-    cachedData.subtitle = subheading; // Update cached subtitle
-    
-    fakePhoneHeading.textContent = `${heading} - ${subheading}`;
-}
-
-
-/// Submit button action
-document.getElementById('submitChanges').addEventListener('click', async function () {
+// Submit button action
+document.getElementById('createnewrecord').addEventListener('click', async function () {
     const updatedCachedData = JSON.parse(localStorage.getItem('cachedData'));
-    
-    const docId = updatedCachedData?.docId; // Check if docId exists
-    if (!docId) {
-        console.error("Document ID not found. Cannot update.");
-        return;
-    }
+    const updatedtopicsArray = JSON.parse(localStorage.getItem('arrayCache'));
 
     try {
-        await window.updateDiseaseOrDrug(docId, updatedCachedData);
+        await window.updatetopicsheading(updatedtopicsArray, updatedCachedData);
         console.log("Data successfully updated!");
+
+        // Display success message on the phone screen
+        const phoneDisplay = document.getElementById('fakePhoneDisplay');
+        phoneDisplay.innerHTML = ''; // Clear the existing display
+
+        const successMessage = document.createElement('div');
+        successMessage.classList.add('success-message');
+        successMessage.textContent = 'Document successfully updated!';
+        phoneDisplay.appendChild(successMessage);
+
     } catch (error) {
         console.error("Error updating document: ", error);
     }
 });
-
-
-
-
-
-
-// Update cached data on changes
-// Update cached data on change
-function addItemToCache(newItem) {
-    if (!cachedData.sections || !Array.isArray(cachedData.sections)) {
-        cachedData.sections = [];  // Initialize sections if they don't exist
-    }
-
-    // Ensure at least one section exists to add content
-    if (cachedData.sections.length === 0) {
-        cachedData.sections.push({ header: '', content: [] });
-    }
-
-    // Add the new item to the last section's content
-    cachedData.sections[cachedData.sections.length - 1].content.push(newItem);
-    localStorage.setItem('cachedData', JSON.stringify(cachedData));  // Save to localStorage
-
-     // Re-render the display with updated data
-     renderDataInFakePhone(cachedData);
-}
-
-
-
-// Add item button event listener
-document.getElementById('addItem').addEventListener('click', function () {
-    const inputText = document.getElementById('inputText').value;
-    const itemType = document.getElementById('itemType').value;
-
-    if (inputText.trim() === "") return;
-
-    if (editingItem) {
-        // Editing an existing item
-        const sectionIndex = editingItem.dataset.sectionIndex;
-        const contentIndex = editingItem.dataset.contentIndex;
-
-        // Update the cached data
-        const updatedItem = {
-            type: getTypeValue(itemType),
-            text: inputText
-        };
-        cachedData.sections[sectionIndex].content[contentIndex] = updatedItem;
-
-        // Update UI
-        const contentDiv = editingItem.querySelector('.item-content');
-        contentDiv.textContent = (itemType === 'bullet') ? '• ' + inputText : inputText;
-
-        // Deselect the item after editing
-        editingItem.classList.remove('active');
-        editingItem = null;
-    } else {
-        // Adding a new item
-        const newItem = {
-            type: getTypeValue(itemType),
-            text: inputText
-        };
-
-        // Add to cache and UI
-        addItemToCache(newItem);
-        addItemToDisplay(inputText, itemType);
-    }
-
-    // Clear the input field
-    document.getElementById('inputText').value = "";
-    localStorage.setItem('cachedData', JSON.stringify(cachedData));  // Save to localStorage
-    console.log('Updated cachedData.sections:', cachedData.sections);
-});
-
-// Helper function to add a new item to the cache
-function addItemToCache(newItem) {
-    if (!cachedData.sections || !Array.isArray(cachedData.sections)) {
-        cachedData.sections = [];  // Initialize sections if they don't exist
-    }
-
-    // Ensure at least one section exists to add content
-    if (cachedData.sections.length === 0) {
-        cachedData.sections.push({ header: '', content: [] });
-    }
-
-    // Add the new item to the last section's content
-    cachedData.sections[cachedData.sections.length - 1].content.push(newItem);
-    localStorage.setItem('cachedData', JSON.stringify(cachedData));  // Save to localStorage
-}
-
-// Helper function to add a new item to the cache
-// Helper function to add a new item to the cache
-// Helper function to add a new item to the cache
-// Helper function to add a new item to the cache
-
-
-
-
-// Helper function to map item type to corresponding number
-function getTypeValue(itemType) {
-    switch (itemType) {
-        case 'bullet':
-            return 1; 
-        case 'text':
-            return 2; 
-        case 'numberbullet':
-            return 3; 
-        case 'titleheading':
-            return 4; 
-        case 'sectionheading':
-            return 5; 
-        default:
-            return 0;
-    }
-}
-
-
+    </script>
+</body>
+</html>

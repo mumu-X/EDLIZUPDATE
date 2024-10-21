@@ -1,9 +1,8 @@
 // Firebase Initialization & Imports
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Firestore, getFirestore, setDoc, doc, collection, getDoc,query, where,getDocs, updateDoc } from "firebase/firestore";
+import { Firestore,deleteDoc ,getFirestore, setDoc, doc, collection, getDoc,query, where,getDocs, updateDoc } from "firebase/firestore";
 import { deleteObject, getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
-
 
 
 // Initialize Firebase app
@@ -25,6 +24,9 @@ const app = initializeApp(firebaseConfig);
         
 
 window.cachedData=cachedData
+
+let arrayCache = []
+window.arrayCache = arrayCache;
 
 
 window.onload = () => {
@@ -50,6 +52,10 @@ window.onload = () => {
     }
     else if (currentPath.includes('updateExistingDisease')){
         fetchTopics();
+    }
+    else if (currentPath.includes('Delete_record.html')) {
+        // Run only on page3.html    
+        fetchTopicsCreate();
     }
     
     // If you want to check for specific elements that exist only on certain pages
@@ -88,8 +94,6 @@ const updateDiseaseOrDrug = async (docId, dataToUpdate) => {
 window.updateDiseaseOrDrug=updateDiseaseOrDrug;
         
 
-
-
 // Function to fetch topics and display them
 // Function to fetch topics if medicalGuidelineTopics is a document
 const fetchTopics = async () => {
@@ -103,35 +107,6 @@ const fetchTopics = async () => {
             const topics = data.topics; // Assuming topics is the field holding the list of topics
 
             populateDropdown(topics);
-        } else {
-            console.log("No such document!");
-        }
-    } catch (error) {
-        console.error("Error fetching topics: ", error);
-    }
-};
-
-
-
-// Call the fetchTopics function when the script loads
-//fetchTopics();
-
-const fetchTopicsCreate = async () => {
-    try {
-        const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            console.log(data); // Check the structure of your data
-            const topics = data.topics; // Assuming topics is the field holding the list of topics
-
-            populateDropdownCreate(topics);
-
-            // Save topics array to local storage for later editing
-            localStorage.setItem('arrayCache', JSON.stringify(topics));
-
-            
         } else {
             console.log("No such document!");
         }
@@ -184,17 +159,6 @@ localStorage.setItem('cachedData', JSON.stringify(cachedData));
     }
 };
 
-/*function clearFakePhoneDisplay(message) {
-    const fakePhoneDisplay = document.getElementById('fakePhoneDisplay');
-    fakePhoneDisplay.innerHTML = ''; // Clear previous content
-
-    const errorMessage = document.createElement('div');
-    errorMessage.textContent = message;
-    errorMessage.style.color = "red";
-    errorMessage.style.fontWeight = "bold";
-    errorMessage.style.textAlign = "center";
-    fakePhoneDisplay.appendChild(errorMessage);
-}*/
 
 window.fetchSubheadingData = fetchSubheadingData;
 window.cachedData = {}; // Initialize global cachedData
@@ -202,56 +166,121 @@ window.cachedData = {}; // Initialize global cachedData
 
 
 
-/*window.onload = function() {
-    const heading = document.getElementById('heading').value;
-    const subheading = document.getElementById('subheading').value;
-    if (heading && subheading) {
-        fetchSubheadingData(subheading, heading);  // Fetch data from Firestore on page load
+
+
+
+
+const fetchTopicsCreate = async () => {
+    try {
+        const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            console.log('Fetched :' , data); // Check the structure of your data
+            const topics = data.topics; // Assuming topics is the field holding the list of topics
+
+            populateDropdownCreate(topics);
+
+            // Loop through the topics and store them in arrayCache
+            arrayCache= topics.map(topic => {
+                return {
+                    maintopic: topic.label, // Use 'label' as the maintopic
+                    subtopics: topic.subtopics // Use 'subtopics' array for each maintopic
+                };
+            });
+            // Save topics array to local storage for later editing
+            localStorage.setItem('arrayCache', JSON.stringify(arrayCache));
+
+            console.log('Arraycade topics:', arrayCache);
+
+            
+        } else {
+            console.log("No such document!");
+        }
+    } catch (error) {
+        console.error("Error fetching topics: ", error);
     }
 };
-*/
-
-
-
-
 
 
 
 
 // Function to update Firestore topics
-const updatetopicsheading = async (Updatedtopicsheading) => {
+const updatetopicsheading = async (updatedtopicsArray, Updatedtopicsheading) => {
     try {
-
+        // Get reference to the Firestore document
         const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
+
+        // Transform the updatedTopicsArray into the structure Firestore expects
+        const formattedTopics = updatedtopicsArray.map(topic => ({
+            label: topic.maintopic, // assuming 'maintopic' holds the label value
+            subtopics: topic.subtopics // subtopics array
+        }));
+
+        // Update the document with the new topics array
         await updateDoc(docRef, {
-           // title: dataToUpdate.title,
-           // subtitle: dataToUpdate.subtitle,
-            sections: dataToUpdate.sections
+            topics: formattedTopics // Replacing topics array in Firestore with the updated version
         });
+
         console.log("Document successfully updated in Firestore!");
     } catch (error) {
         console.error("Error updating document: ", error);
     }
+
+// Add a new document in collection "DIseases_Conditions"
+    // Add a new document in collection "cities"
+    const newDocRef = doc(collection(db, "DIseases_Conditions"))
+    await setDoc(newDocRef, {
+      title: Updatedtopicsheading.subtitle,
+    subtitle: Updatedtopicsheading.title,
+    sections: Updatedtopicsheading.sections,
+    });
 };
 
-window.updatetopicsheading
+window.updatetopicsheading= updatetopicsheading;
 
 
+// Function to update Firestore topics
+const deletetopicsheading = async (updatedtopicsArray) => {
+    try {
+        // Get reference to the Firestore document
+        const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
 
+        // Transform the updatedTopicsArray into the structure Firestore expects
+        const formattedTopics = updatedtopicsArray.map(topic => ({
+            label: topic.maintopic, // assuming 'maintopic' holds the label value
+            subtopics: topic.subtopics // subtopics array
+        }));
 
+        console.log('Formatted Topics:', formattedTopics);
 
+        // Update the document with the new topics array
+        await updateDoc(docRef, {
+            topics: formattedTopics // Replacing topics array in Firestore with the updated version
+        });
 
+        console.log("Document successfully updated in Firestore!");
+    } catch (error) {
+        console.error("Error updating document: ", error);
+    }
 
-
-
-
-
-
-
-
-
-
+// Add a new document in collection "DIseases_Conditions"
+    // Add a new document in collection "cities"
+    const newDocRef = doc(collection(db, "DIseases_Conditions"))
+    await deleteDoc(docRef);
       
+    };
+
+window.deletetopicsheading= deletetopicsheading;
+
+
+
+
+
+
+
+
 
         // Modify the uploadImage function to accept imgId
 function uploadImage(file, imgId) {

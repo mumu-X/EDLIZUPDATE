@@ -41,6 +41,8 @@ const renderDataInFakePhone = () => {
             // Set section and content index on the display item
             displayItem.dataset.sectionIndex = sectionIndex;
             displayItem.dataset.contentIndex = contentIndex;
+            // Add a specific class based on the item type
+            displayItem.classList.add(`item-${item.type}`);
 
             // Create content element
             const content = document.createElement('div');
@@ -226,8 +228,6 @@ function Add_OR_EditDisplayItem(editingItem) {
        }
     }
     else{
-        
-        // Handle new item addition
 
         // Assign the correct sectionIndex if it's undefined or null
         if (sectionIndex === null || sectionIndex === undefined) {
