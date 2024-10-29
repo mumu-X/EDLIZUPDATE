@@ -1,29 +1,89 @@
 // Firebase Initialization & Imports
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Firestore,deleteDoc ,getFirestore, setDoc, doc, collection, getDoc,query, where,getDocs, updateDoc } from "firebase/firestore";
+import { deleteDoc, getFirestore, setDoc, doc, collection, getDoc, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { deleteObject, getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
 
+const firebaseConfig = {
+    apiKey: "AIzaSyCxSruCUGov5UTLY1An081gsAVjTFuKoNI",
+    authDomain: "edliz-2.firebaseapp.com",
+    projectId: "edliz-2",
+    storageBucket: "edliz-2.appspot.com",
+    messagingSenderId: "1013049259286",
+    appId: "1:1013049259286:web:1fcd8e8f982b6dc9568c37",
+    measurementId: "G-HXQQHWQEDL"
+};
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore();
-        const storage = getStorage();
+const auth = getAuth(app);
+const db = getFirestore();
+const storage = getStorage();
 
-        window.db = db;
-
-
-        // Caching data
-        let cachedData = JSON.parse(localStorage.getItem('cachedData')) || {
-            title: '',
-            subtitle: '',
-            sections: [{ header: '', content: [] }],
-            docId: null
-        };
+// Function to fetch JSON from Firebase Storage, update, and re-upload
+async function fetchMainJSON(Updatedtopicsheading) {
+    try {
+        // Reference to the JSON file in Firebase Storage
+        const mainJSONref = ref(storage, "gs://edliz-2.appspot.com/Data/EDLIZMASTER.json");
         
+        // Get JSON download URL and fetch data
+        const url = await getDownloadURL(mainJSONref);
+        const response = await fetch(url);
+        let mainJSONData = await response.json();
 
-window.cachedData=cachedData
+        // Modify JSON data: find or create topic and subtopic sections
+        updateMainJSONData(mainJSONData, Updatedtopicsheading);
+
+        // Convert modified JSON back to string and re-upload it to Firebase Storage
+        const updatedJSON = JSON.stringify(mainJSONData);
+        const blob = new Blob([updatedJSON], { type: "application/json" });
+        await uploadBytes(mainJSONref, blob);
+
+        console.log("JSON data successfully updated in Firebase Storage!");
+
+    } catch (error) {
+        console.error("Error fetching or updating JSON data:", error);
+    }
+}
+
+// Helper function to modify JSON structure
+function updateMainJSONData(mainJSONData, Updatedtopicsheading) {
+    // Search or create new topic based on Updatedtopicsheading.title
+    let topic = mainJSONData.EDLIZ.find(item => item.label === Updatedtopicsheading.title);
+    
+    // If topic doesn't exist, create it
+    if (!topic) {
+        topic = { label: Updatedtopicsheading.title, Array: [] };
+        mainJSONData.EDLIZ.push(topic);
+    }
+
+    // Search or create subtopic within the topic based on Updatedtopicsheading.subtitle
+    let subtopic = topic.Array.find(sub => sub.subtopic === Updatedtopicsheading.subtitle);
+    
+    // If subtopic doesn't exist, create it
+    if (!subtopic) {
+        subtopic = { subtopic: Updatedtopicsheading.subtitle, sections: [] };
+        topic.Array.push(subtopic);
+    }
+
+    // Append new sections to the subtopic's sections array
+    subtopic.sections.push(...Updatedtopicsheading.sections);
+}
+
+
+window.db = db;
+
+
+// Caching data
+let cachedData = JSON.parse(localStorage.getItem('cachedData')) || {
+    title: '',
+    subtitle: '',
+    sections: [{ header: '', content: [] }],
+    docId: null
+};
+
+
+window.cachedData = cachedData
 
 let arrayCache = []
 window.arrayCache = arrayCache;
@@ -33,7 +93,7 @@ window.onload = () => {
     const currentPath = window.location.pathname;
 
     if (currentPath.includes('Event_up_date.html')) {
-    
+
         // Example usage for multiple images
         $(document).ready(function () {
             // Fetch images and handle missing images
@@ -48,16 +108,16 @@ window.onload = () => {
     } else if (currentPath.includes('create_record.html')) {
         // Run only on page2.html
         fetchTopicsCreate();
-      
+
     }
-    else if (currentPath.includes('updateExistingDisease')){
+    else if (currentPath.includes('updateExistingDisease')) {
         fetchTopics();
     }
     else if (currentPath.includes('Delete_record.html')) {
         // Run only on page3.html    
-        fetchTopicsCreate();
+        fetchTopics();
     }
-    
+
     // If you want to check for specific elements that exist only on certain pages
     if (document.getElementById('specificElementForPage3')) {
         functionForPage3();
@@ -67,22 +127,22 @@ window.onload = () => {
 
 
 
-        // Check if a user is authenticated
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("User is logged in");
-            } else {
-                console.log("Please sign in");
-            }
-        });
+// Check if a user is authenticated
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("User is logged in");
+    } else {
+        console.log("Please sign in");
+    }
+});
 
 // Function to update Firestore document
 const updateDiseaseOrDrug = async (docId, dataToUpdate) => {
     try {
         const docRef = doc(db, 'DIseases_Conditions', docId);
         await updateDoc(docRef, {
-           // title: dataToUpdate.title,
-           // subtitle: dataToUpdate.subtitle,
+            // title: dataToUpdate.title,
+            // subtitle: dataToUpdate.subtitle,
             sections: dataToUpdate.sections
         });
         console.log("Document successfully updated in Firestore!");
@@ -91,8 +151,8 @@ const updateDiseaseOrDrug = async (docId, dataToUpdate) => {
     }
 };
 
-window.updateDiseaseOrDrug=updateDiseaseOrDrug;
-        
+window.updateDiseaseOrDrug = updateDiseaseOrDrug;
+
 
 // Function to fetch topics and display them
 // Function to fetch topics if medicalGuidelineTopics is a document
@@ -135,16 +195,16 @@ const fetchSubheadingData = async (subheading, heading) => {
                 // Clear previous cached data in localStorage
                 localStorage.removeItem('cachedData');
 
-// Create new cachedData based on fetched data
-cachedData = {
-    title: docData.title || '',
-    subtitle: docData.subtitle || '',
-    docId: docId,
-    sections: docData.sections || [{ header: '', content: [] }]
-};
+                // Create new cachedData based on fetched data
+                cachedData = {
+                    title: docData.title || '',
+                    subtitle: docData.subtitle || '',
+                    docId: docId,
+                    sections: docData.sections || [{ header: '', content: [] }]
+                };
 
-// Save new cached data to localStorage as a string
-localStorage.setItem('cachedData', JSON.stringify(cachedData));
+                // Save new cached data to localStorage as a string
+                localStorage.setItem('cachedData', JSON.stringify(cachedData));
 
                 console.log('Cached Data after fetching:', cachedData);
 
@@ -166,10 +226,6 @@ window.cachedData = {}; // Initialize global cachedData
 
 
 
-
-
-
-
 const fetchTopicsCreate = async () => {
     try {
         const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
@@ -177,13 +233,13 @@ const fetchTopicsCreate = async () => {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            console.log('Fetched :' , data); // Check the structure of your data
+            console.log('Fetched :', data); // Check the structure of your data
             const topics = data.topics; // Assuming topics is the field holding the list of topics
 
             populateDropdownCreate(topics);
 
             // Loop through the topics and store them in arrayCache
-            arrayCache= topics.map(topic => {
+            arrayCache = topics.map(topic => {
                 return {
                     maintopic: topic.label, // Use 'label' as the maintopic
                     subtopics: topic.subtopics // Use 'subtopics' array for each maintopic
@@ -194,7 +250,7 @@ const fetchTopicsCreate = async () => {
 
             console.log('Arraycade topics:', arrayCache);
 
-            
+
         } else {
             console.log("No such document!");
         }
@@ -228,27 +284,31 @@ const updatetopicsheading = async (updatedtopicsArray, Updatedtopicsheading) => 
         console.error("Error updating document: ", error);
     }
 
-// Add a new document in collection "DIseases_Conditions"
+    // Add a new document in collection "DIseases_Conditions"
     // Add a new document in collection "cities"
     const newDocRef = doc(collection(db, "DIseases_Conditions"))
     await setDoc(newDocRef, {
-      title: Updatedtopicsheading.subtitle,
-    subtitle: Updatedtopicsheading.title,
-    sections: Updatedtopicsheading.sections,
+        title: Updatedtopicsheading.subtitle,
+        subtitle: Updatedtopicsheading.title,
+        sections: Updatedtopicsheading.sections,
     });
+
+   // Update JSON in Firebase Storage
+   await fetchMainJSON(Updatedtopicsheading);
+
 };
 
-window.updatetopicsheading= updatetopicsheading;
+window.updatetopicsheading = updatetopicsheading;
 
 
 // Function to update Firestore topics
-const deletetopicsheading = async (updatedtopicsArray) => {
+const deletetopicsheading = async (arrayCache, cachedData) => {
     try {
         // Get reference to the Firestore document
         const docRef = doc(db, 'lists', 'medicalGuidelineTopics');
 
         // Transform the updatedTopicsArray into the structure Firestore expects
-        const formattedTopics = updatedtopicsArray.map(topic => ({
+        const formattedTopics = arrayCache.map(topic => ({
             label: topic.maintopic, // assuming 'maintopic' holds the label value
             subtopics: topic.subtopics // subtopics array
         }));
@@ -265,14 +325,22 @@ const deletetopicsheading = async (updatedtopicsArray) => {
         console.error("Error updating document: ", error);
     }
 
-// Add a new document in collection "DIseases_Conditions"
-    // Add a new document in collection "cities"
-    const newDocRef = doc(collection(db, "DIseases_Conditions"))
-    await deleteDoc(docRef);
-      
-    };
+    // Now handle deleting the specific document in "DIseases_Conditions"
+    try {
+        // Get reference to the document to be deleted in the "DIseases_Conditions" collection
+        const deleteDocRef = doc(db, "DIseases_Conditions", cachedData.docId);
 
-window.deletetopicsheading= deletetopicsheading;
+        // Delete the document
+        await deleteDoc(deleteDocRef);
+
+        console.log("Document successfully deleted from DIseases_Conditions!");
+    } catch (error) {
+        console.error("Error deleting document: ", error);
+    }
+
+};
+
+window.deletetopicsheading = deletetopicsheading;
 
 
 
@@ -282,7 +350,7 @@ window.deletetopicsheading= deletetopicsheading;
 
 
 
-        // Modify the uploadImage function to accept imgId
+// Modify the uploadImage function to accept imgId
 function uploadImage(file, imgId) {
     const picref = ref(storage, imgId); // Use the imgId to create the storage reference
     uploadBytes(picref, file)
@@ -304,66 +372,66 @@ function uploadImage(file, imgId) {
 }
 
 
-        // Make the function accessible globally
-        window.uploadImage = uploadImage;
+// Make the function accessible globally
+window.uploadImage = uploadImage;
 
-                // Function to delete the image, dynamically based on the image path
-                function deleteImage(imagePath, parentDiv) {
-                    const picref = ref(storage, imagePath);
-                    deleteObject(picref)
-                        .then(() => {
-                            console.log("Image deleted successfully!");
-                
-                            // Add a background number based on the parent div's id
-                            const parentId = parentDiv.attr("id");
-                            let backgroundNumber;
-                
-                            switch (parentId) {
-                                case "viewpicfirst":
-                                    backgroundNumber = 1;
-                                    break;
-                                case "viewpicsecond":
-                                    backgroundNumber = 2;
-                                    break;
-                                case "viewpicthird":
-                                    backgroundNumber = 3;
-                                    break;
-                                case "viewpicfourth":
-                                    backgroundNumber = 4;
-                                    break;
-                                case "viewpicfifth":
-                                    backgroundNumber = 5;
-                                    break;
-                                case "viewpicsixth":
-                                    backgroundNumber = 6;
-                                    break;
-                                case "viewpicseventh":
-                                    backgroundNumber = 7;
-                                    break;
-                            }
-                
-                            // Apply a ghost class and add the background number to the parent div
-                            parentDiv.empty();  // Clear the contents of the parent div
-                            parentDiv.addClass("ghost").attr("data-number", backgroundNumber);
-                            
-                            // Add a placeholder "Add Image" button
-                            parentDiv.append('<button class="add-btn" data-img-id="' + imagePath + '">Add Image</button><input type="file" accept="image/*" style="display:none;">');
-                        })
-                        .catch((error) => {
-                            console.error("Error deleting image: ", error);
-                        });
-                }
-                
+// Function to delete the image, dynamically based on the image path
+function deleteImage(imagePath, parentDiv) {
+    const picref = ref(storage, imagePath);
+    deleteObject(picref)
+        .then(() => {
+            console.log("Image deleted successfully!");
+
+            // Add a background number based on the parent div's id
+            const parentId = parentDiv.attr("id");
+            let backgroundNumber;
+
+            switch (parentId) {
+                case "viewpicfirst":
+                    backgroundNumber = 1;
+                    break;
+                case "viewpicsecond":
+                    backgroundNumber = 2;
+                    break;
+                case "viewpicthird":
+                    backgroundNumber = 3;
+                    break;
+                case "viewpicfourth":
+                    backgroundNumber = 4;
+                    break;
+                case "viewpicfifth":
+                    backgroundNumber = 5;
+                    break;
+                case "viewpicsixth":
+                    backgroundNumber = 6;
+                    break;
+                case "viewpicseventh":
+                    backgroundNumber = 7;
+                    break;
+            }
+
+            // Apply a ghost class and add the background number to the parent div
+            parentDiv.empty();  // Clear the contents of the parent div
+            parentDiv.addClass("ghost").attr("data-number", backgroundNumber);
+
+            // Add a placeholder "Add Image" button
+            parentDiv.append('<button class="add-btn" data-img-id="' + imagePath + '">Add Image</button><input type="file" accept="image/*" style="display:none;">');
+        })
+        .catch((error) => {
+            console.error("Error deleting image: ", error);
+        });
+}
 
 
-        // Make the function globally accessible
-        window.deleteImage = deleteImage;
 
-        // Function to fetch an image from Firebase and update the UI
-        // Function to fetch an image from Firebase and update the UI
+// Make the function globally accessible
+window.deleteImage = deleteImage;
+
+
+// Function to fetch an image from Firebase and update the UI
 function fetchImage(imagePath, imageElementId, parentDiv) {
     const picref = ref(storage, imagePath); // Reference to the image in Firebase
-    
+
     getDownloadURL(picref)
         .then((url) => {
             // If the image is found, set the image src
@@ -376,7 +444,7 @@ function fetchImage(imagePath, imageElementId, parentDiv) {
             // If no image is found, show the ghost placeholder
             parentDiv.empty();  // Clear the content of the div
             parentDiv.addClass("ghost");  // Add ghost styling class
-            
+
             // Add a background number based on the parent div's id
             const parentId = parentDiv.attr("id");
             let backgroundNumber;
@@ -405,4 +473,3 @@ function fetchImage(imagePath, imageElementId, parentDiv) {
 }
 
 
-       

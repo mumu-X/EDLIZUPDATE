@@ -41,31 +41,88 @@ const renderDataInFakePhone = () => {
             // Set section and content index on the display item
             displayItem.dataset.sectionIndex = sectionIndex;
             displayItem.dataset.contentIndex = contentIndex;
-            // Add a specific class based on the item type
-            displayItem.classList.add(`item-${item.type}`);
 
-            // Create content element
-            const content = document.createElement('div');
-            content.classList.add('item-content');
-            content.textContent = item.type === 5 ? '• ' + item.text : item.text;
+            // Handle item rendering based on type
+            if (item.type === "table") {
+                // Create a table element
+                const table = document.createElement('table');
+                table.classList.add('item-table'); // Custom class for styling
 
-            // Append content to display item and to the fake phone display
-            displayItem.appendChild(content);
+                // Extract table data from the `text` field (array of objects)
+                const tableData = item.text;
+
+                if (Array.isArray(tableData) && tableData.length > 0) {
+                    // Create table headers based on the first object keys
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    
+                    // Get headers from the keys of the first object in the array
+                    const headers = Object.keys(tableData[0]);
+
+                    headers.forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    });
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    // Create table body
+                    const tbody = document.createElement('tbody');
+
+                    // Populate table rows with data
+                    tableData.forEach(rowData => {
+                        const row = document.createElement('tr');
+                        headers.forEach(headerText => {
+                            const td = document.createElement('td');
+                            td.textContent = rowData[headerText] || ''; // Fill empty cells with empty string
+                            row.appendChild(td);
+                        });
+                        tbody.appendChild(row);
+                    });
+
+                    table.appendChild(tbody);
+                } else {
+                    // In case the table data is empty
+                    const noDataRow = document.createElement('tr');
+                    const noDataCell = document.createElement('td');
+                    noDataCell.colSpan = 5; // Span across the table width
+                    noDataCell.textContent = 'No table data available';
+                    noDataRow.appendChild(noDataCell);
+                    table.appendChild(noDataRow);
+                }
+
+                displayItem.appendChild(table);
+            } else {
+                // Non-table items: Render as before
+                const content = document.createElement('div');
+                content.classList.add('item-content');
+                content.textContent = item.type === 5 ? '• ' + item.text : item.text;
+
+                displayItem.appendChild(content);
+            }
+
+            // Append content to the fake phone display
             fakePhoneDisplay.appendChild(displayItem);
 
             // Enable selection of the item for editing
             displayItem.addEventListener('click', function () {
-            handleItemSelection(displayItem ,sectionIndex,contentIndex);
-});
+                handleItemSelection(displayItem, sectionIndex, contentIndex);
+            });
 
-enableDragAndDrop(displayItem, sectionIndex)
+            enableDragAndDrop(displayItem, sectionIndex);
         });
     });
 
-    
-
     console.log("Rendered Data:", data);
 };
+
+// Add some CSS styles to style the table in the display
+const style = document.createElement('style');
+style.innerHTML = `
+    
+`;
+document.head.appendChild(style);
 
 // Example delete function
 function deleteItemFromSection(sectionIndex, contentIndex) {
@@ -202,6 +259,8 @@ function Add_OR_EditDisplayItem(editingItem) {
     let sectionIndex = editingItem.sectionIndex;
     let contentIndex = editingItem.contentIndex;
 
+    
+
 
     // Check if the section exists; if not, initialize it
     if (!data.sections[sectionIndex]) {
@@ -229,6 +288,41 @@ function Add_OR_EditDisplayItem(editingItem) {
     }
     else{
 
+        if (type === 'table'){
+
+            if (sectionIndex === null || sectionIndex === undefined) {
+                sectionIndex = 0; // Default to the first section, or change to dynamically select a section
+            }
+
+        
+
+            // Process CSV and convert to JSON
+            const csv = inputText;
+            const tableData = csvJSON(csv); // Get parsed CSV data as an array of objects
+
+            // Debugging: Check if the tableData is being parsed correctly
+            console.log('Parsed tableData:', tableData);  // Add this line for debugging
+
+            const newItem = {
+                type: "table",
+                text: tableData // Store the parsed table data
+            };
+
+            // Initialize content array if it doesn't exist
+            if (!data.sections[sectionIndex].content) {
+                data.sections[sectionIndex].content = [];}
+
+         // Add the parsed table data as a new item
+            contentIndex = data.sections[sectionIndex].content.length; // Set contentIndex to the next available position
+            data.sections[sectionIndex].content.push(newItem);
+
+            //Debugging: Check if the newItem is added to the content array
+            console.log('Updated content array:', data.sections[sectionIndex].content);
+
+        }
+
+        else{
+
         // Assign the correct sectionIndex if it's undefined or null
         if (sectionIndex === null || sectionIndex === undefined) {
             sectionIndex = 0; // Default to the first section, or change to dynamically select a section
@@ -248,7 +342,7 @@ function Add_OR_EditDisplayItem(editingItem) {
         // Add the new item to the content array
         contentIndex = data.sections[sectionIndex].content.length; // Set contentIndex to the next available position
         data.sections[sectionIndex].content.push(newItem);
-    }
+    }}
 
 
 // Save the updated cache to localStorage
@@ -369,3 +463,43 @@ document.getElementById('submitChanges').addEventListener('click', async functio
         console.error("Error updating document: ", error);
     }
 });
+
+
+
+function csvJSON(csv){
+
+    var lines=csv.split("\n");
+  
+    var result = [];
+  
+    // NOTE: If your columns contain commas in their values, you'll need
+    // to deal with those before doing the next step 
+    // (you might convert them to &&& or something, then covert them back later)
+    // jsfiddle showing the issue https://jsfiddle.net/
+    var headers=lines[0].split(",");
+  
+    for(var i=1;i<lines.length;i++){
+  
+        var obj = {};
+        var currentline=lines[i].split(",");
+
+        // Skip rows that are completely empty or have no meaningful data
+        if (currentline.every(cell => cell.trim() === "")) {
+            continue; // Skip this row
+        }
+  
+        for(var j=0;j<headers.length;j++){
+            const key = headers[j].trim();  // Remove extra spaces around header names
+            const value = currentline[j] ? currentline[j].trim() : ""; // Replace undefined with empty string
+        
+            if (key !== "") {  // Filter out any empty headers
+                obj[key] = value; // Add to the object only if the key is not empty
+        }}
+         // Filter out empty objects or rows with only empty fields
+         if (Object.values(obj).some(value => value.trim() !== "")) {
+            result.push(obj); // Only add non-empty rows to the result
+        }
+  }
+  return result; //return the new item
+  
+};

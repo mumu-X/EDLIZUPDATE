@@ -78,149 +78,145 @@
 
     <script src="../../main.js"></script>
     <script>
-        let arrayCache = JSON.parse(localStorage.getItem('arrayCache')) || [];
-        const deleteButton = document.getElementById('deleteButton');
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmDeleteButton = document.getElementById('confirmDelete');
-        const cancelDeleteButton = document.getElementById('cancelDelete');
-    
-        const populateDropdownCreate = (topics) => {
-            const headingSelect = document.getElementById('heading');
-            const subheadingSelect = document.getElementById('subheading');
-    
-            headingSelect.innerHTML = '<option value="">Select a heading or use ➕ to create one</option>';
-            subheadingSelect.innerHTML = '<option value="">Use ➕ to create a subheading</option>';
-    
-            topics.forEach((topic, index) => {
-                const option = document.createElement('option');
-                option.value = index;  // Still storing index for internal operations
-                option.textContent = topic.label;  // Display the actual label in the dropdown
-                headingSelect.appendChild(option);
-            });
-    
-            headingSelect.addEventListener('change', function () {
-                const selectedIndex = this.value;
-                if (!selectedIndex) {
-                    subheadingSelect.innerHTML = '<option value="">Select a subheading</option>';
-                    updateCachedData('', '');  // Pass empty values when no heading is selected
-                    return;
-                }
-    
-                const selectedTopic = topics[selectedIndex];
-                subheadingSelect.innerHTML = '<option value="">Use ➕ to create one</option>';
-                selectedTopic.subtopics.forEach(subtopic => {
-                    const subOption = document.createElement('option');
-                    subOption.value = subtopic;
-                    subOption.textContent = subtopic;
-                    subheadingSelect.appendChild(subOption);
 
-                });
-    
-                // Update cachedData with actual heading label
-                updateCachedData(selectedTopic.label, '');  // Set the heading label, not the index
-            });
-    
-            subheadingSelect.addEventListener('change', function () {
-                const subheading = subheadingSelect.value;
-                const selectedIndex = headingSelect.value;
-    
-                if (subheading) {
-                    deleteButton.disabled = false;  // Enable delete button
-                    deleteButton.classList.add('active');  // Change to red
-                } else {
-                    deleteButton.disabled = true;
-                    deleteButton.classList.remove('active');  // Reset to grey
-                }
-    
-                // Ensure that we use the label (not index) for heading in cachedData
-                const selectedTopic = topics[selectedIndex];
-                updateCachedData(selectedTopic.label, subheading);  // Pass both the heading label and subheading
-                updateData();
+const deleteButton = document.getElementById('deleteButton');
+const confirmModal = document.getElementById('confirmModal');
+const confirmDeleteButton = document.getElementById('confirmDelete');
+const cancelDeleteButton = document.getElementById('cancelDelete');
 
-                
-            });
-        };
-    
-        // Show confirmation modal when delete is clicked
-        deleteButton.addEventListener('click', () => {
-            confirmModal.style.display = 'block';
+         // Function to populate the heading dropdown
+const populateDropdown = (topics) => {
+    const headingSelect = document.getElementById('heading');
+    const subheadingSelect = document.getElementById('subheading');
+
+    // Clear existing options
+    headingSelect.innerHTML = '';
+
+    topics.forEach((topic) => {
+        const option = document.createElement('option');
+        option.value = topic.label; // Use the label as value to preserve data consistency
+        option.textContent = topic.label; // Use the label from Firebase data
+        headingSelect.appendChild(option);
+    });
+
+    // Listen for heading change to update subtopics
+    headingSelect.addEventListener('change', function() {
+        const selectedHeading = headingSelect.value; // Get selected heading value (label)
+
+        // Find the selected topic in topics array
+        const selectedTopic = topics.find(topic => topic.label === selectedHeading);
+
+        // Clear existing subtopics and populate new ones
+        subheadingSelect.innerHTML = 'Select subheading to delete';
+        selectedTopic.subtopics.forEach(subtopic => {
+            const subOption = document.createElement('option');
+            subOption.value = subtopic;
+            subOption.textContent = subtopic;
+            subheadingSelect.appendChild(subOption);
         });
-    
-        // Handle confirm delete action
-        confirmDeleteButton.addEventListener('click', () => {
-            const selectedHeadingIndex = document.getElementById('heading').value;
-            const selectedSubheading = document.getElementById('subheading').value;
-    
-            if (selectedHeadingIndex !== '') {
-                // Parse arrayCache
-                const selectedTopic = arrayCache[selectedHeadingIndex];
-                const subtopics = selectedTopic.subtopics;
-    
-                // Find and remove the selected subheading
+
+        // Trigger subtopic data fetch if both heading and subheading are selecte
+    });
+
+    // Trigger update data whenever subheading changes
+    subheadingSelect.addEventListener('change', updateData);
+
+    // Trigger initial population and data fetch
+    headingSelect.dispatchEvent(new Event('change'));
+
+    subheadingSelect.addEventListener('change', function () {
+        const subheading = subheadingSelect.value;
+        const selectedIndex = headingSelect.value;
+
+        if (subheading) {
+            deleteButton.disabled = false;  // Enable delete button
+            deleteButton.classList.add('active');  // Change to red
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.classList.remove('active');  // Reset to grey
+        }
+        
+    });
+};
+
+// Show confirmation modal when delete is clicked
+deleteButton.addEventListener('click', () => {
+    confirmModal.style.display = 'block';
+});
+
+
+// Update the data fetch based on the selected heading and subheading
+// Update the data fetch based on the selected heading and subheading
+// Update the data fetch based on the selected heading and subheading
+function updateData() {
+    const selectedHeading = document.getElementById('heading').value;
+    const selectedSubheading = document.getElementById('subheading').value;
+
+    if (selectedHeading !== '' && selectedSubheading !== '') {
+        // Clear the display and fetch new data
+        clearFakePhoneDisplay();
+        fetchSubheadingData(selectedSubheading, selectedHeading);
+    }
+};
+
+// Handle confirm delete action
+confirmDeleteButton.addEventListener('click', () => {
+    const selectedHeading = document.getElementById('heading').value;  // This is the maintopic (label)
+    const selectedSubheading = document.getElementById('subheading').value;
+
+    if (selectedHeading !== '') {
+        // Parse arrayCache
+        let arrayCache = JSON.parse(localStorage.getItem('arrayCache')) || [];
+
+        // Find the selected topic in arrayCache by maintopic
+        const selectedTopicIndex = arrayCache.findIndex(topic => topic.maintopic === selectedHeading);
+
+        if (selectedTopicIndex !== -1) {
+            const selectedTopic = arrayCache[selectedTopicIndex];
+            const subtopics = selectedTopic.subtopics;
+
+            // If there is a selected subheading, remove it
+            if (selectedSubheading && subtopics) {
                 const subheadingIndex = subtopics.indexOf(selectedSubheading);
                 if (subheadingIndex > -1) {
-                    subtopics.splice(subheadingIndex, 1);
-                }
-    
-                // If no subtopics left, remove the entire heading
-                if (subtopics.length === 0) {
-                    arrayCache.splice(selectedHeadingIndex, 1);
+                    subtopics.splice(subheadingIndex, 1);  // Remove the subheading
                 }
 
-                window.deletetopicsheading(arrayCache);
-    
+                // If no subtopics left, remove the entire topic
+                if (subtopics.length === 0) {
+                    arrayCache.splice(selectedTopicIndex, 1);  // Remove the topic
+                }
+
                 // Save updated arrayCache back to localStorage
                 localStorage.setItem('arrayCache', JSON.stringify(arrayCache));
 
-                //window.deletetopicsheading(arrayCache);
-    
-                // Refresh the page after deletion
-                //window.location.reload();
+                // Update the cached data as necessary
+                let cachedData = JSON.parse(localStorage.getItem('cachedData')) || {};
+                window.deletetopicsheading(arrayCache, cachedData);
+
+                // Save the updated cachedData to localStorage
+                localStorage.setItem('cachedData', JSON.stringify(cachedData));
+
+                // Refresh the dropdown and UI after deletion
+                populateDropdown(arrayCache);  // Repopulate the dropdowns with updated data
+                console.log('Deleted subheading:', selectedSubheading);
+            } else {
+                console.error('Subheading not found.');
             }
-    
-            confirmModal.style.display = 'none';
-        });
-    
-        // Handle cancel delete action
-        cancelDeleteButton.addEventListener('click', () => {
-            confirmModal.style.display = 'none';
-        });
-    
-        const updateCachedData = (heading, subheading) => {
-            // Retrieve cachedData from localStorage or initialize a new object
-            let cachedData = JSON.parse(localStorage.getItem('cachedData')) || {
-                title: '',
-                subtitle: '',
-                sections: [{ header: '', content: [] }],
-                docId: null
-            };
-    
-            // Update cachedData with both heading (label, not index) and subheading
-            cachedData.title = heading;  // Set the actual heading label
-            cachedData.subtitle = subheading;
-    
-            // Save updated cachedData to localStorage
-            localStorage.setItem('cachedData', JSON.stringify(cachedData));
-    
-            console.log('Updated cachedData:', cachedData);
-        };
-    
-        function updateData() {
-            const selectedHeading = document.getElementById('heading').value;
-            const selectedSubheading = document.getElementById('subheading').value;
-    
-            if (selectedHeading !== '' && selectedSubheading !== '') {
-                clearFakePhoneDisplay();
-                fetchSubheadingData(selectedSubheading, selectedHeading);
-            }
+        } else {
+            console.error('Selected topic not found.');
         }
+    }
+
+    confirmModal.style.display = 'none';
+});
+
+// Handle cancel delete action
+cancelDeleteButton.addEventListener('click', () => {
+    confirmModal.style.display = 'none';
+});
+     
     
-        function clearFakePhoneDisplay() {
-            document.getElementById('fakePhoneHeading').innerHTML = '';
-            document.getElementById('fakePhoneDisplay').innerHTML = '';
-        }
-    
-        populateDropdownCreate(arrayCache);
     </script>
 
     <style>

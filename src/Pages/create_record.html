@@ -86,6 +86,8 @@
                         <option value="Titleheading">Title heading</option>
                         <option value="sectionheading">section heading</option>
                         <option value="paragraph">paragraph</option>
+                        <option value="table">table</option>
+                        
                     </select>
                     <button id="addItem">+</button>
                 </div>
@@ -310,7 +312,7 @@ const updateCachedData = (heading, subheading) => {
     let cachedData = {
         title: '',
         subtitle: '',
-        sections: [{ header: '', content: [] }],
+        sections: [{ header: '3', content: [] }],
         docId: null
     };
 

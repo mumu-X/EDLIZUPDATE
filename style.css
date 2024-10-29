@@ -443,3 +443,32 @@ button:hover {
     color: #444;
     text-align: justify;
 }
+
+
+
+
+
+
+.item-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    background-color: #f3f3f3;
+    text-align: left;
+}
+
+.item-table th, .item-table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+}
+
+.item-table th {
+    background-color: #f4f4f4;
+}
+
+.display-item {
+    margin-bottom: 15px;
+}
